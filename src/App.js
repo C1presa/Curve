@@ -8,6 +8,7 @@ import PlayerHand from './components/PlayerHand';
 import CardModal from './components/CardModal';
 import DeckSelection from './components/DeckSelection';
 import GameMenu from './components/GameMenu';
+import { initialState } from './gameLogic/gameReducer';
 
 // Game Constants
 const ROWS = 5;
@@ -60,13 +61,13 @@ class ErrorBoundary extends React.Component {
 const getBackgroundClass = (archetype) => {
   switch (archetype) {
     case 'orc':
-      return 'bg-gradient-to-r from-green-900 to-yellow-900';
+      return 'bg-gradient-to-br from-green-900 via-yellow-900 to-green-900';
     case 'undead':
-      return 'bg-gradient-to-r from-purple-900 to-black';
+      return 'bg-gradient-to-br from-purple-900 via-gray-900 to-purple-900';
     case 'human':
-      return 'bg-gradient-to-r from-blue-900 to-gray-700';
+      return 'bg-gradient-to-br from-blue-900 via-gray-700 to-blue-900';
     case 'minotaur':
-      return 'bg-gradient-to-r from-red-900 to-orange-900';
+      return 'bg-gradient-to-br from-red-900 via-orange-800 to-red-900';
     default:
       return 'bg-gray-900';
   }
@@ -74,8 +75,8 @@ const getBackgroundClass = (archetype) => {
 
 // Main Game Component
 const CardBattleGame = () => {
-  const [state, dispatch] = useReducer(gameReducer, null);
   const [gameMode, setGameMode] = useState('menu');
+  const [state, dispatch] = useReducer(gameReducer, initializeGame('minotaur', 'orc'));
   const [selectedUnit, setSelectedUnit] = useState(null);
   const [playerDeckChoices, setPlayerDeckChoices] = useState({ player1: null, player2: null });
   const [deckSelectionPhase, setDeckSelectionPhase] = useState(null);
@@ -227,8 +228,9 @@ const CardBattleGame = () => {
       
       if (gameMode === 'ai') {
         // AI randomly selects a deck
-        const archetypes = Object.keys(ARCHETYPES);
-        const aiArchetype = archetypes[Math.floor(Math.random() * archetypes.length)];
+        const aiArchetype = ['orc', 'undead', 'human', 'minotaur'].filter(a => a !== archetype)[
+          Math.floor(Math.random() * 3)
+        ];
         
         // Start game immediately for AI mode
         const initialState = initializeGame(archetype, aiArchetype);
@@ -282,18 +284,29 @@ const CardBattleGame = () => {
     return null;
   }
 
+  const handleCardClick = (card) => {
+    if (state?.gameMode === 'ai' && state?.currentPlayer === 1) return;
+    dispatch({ type: ACTIONS.SELECT_CARD, payload: { card } });
+  };
+
   // Game UI rendering
   return (
-    <div className={`min-h-screen ${getBackgroundClass(state.players[0].archetype)} flex justify-center items-center`}>
+    <div className={`min-h-screen ${getBackgroundClass(state.players[0].archetype)} flex justify-center items-center transition-all duration-500`}>
       <div className="max-w-4xl w-full p-4">
         <div className="flex justify-between mb-4">
           <div className="bg-blue-900 p-2 rounded shadow-md">
             <h2 className="text-lg text-blue-300">Player 1: {state.players[0].archetype}</h2>
-            <div className="w-full bg-blue-700 h-4 rounded" />
+            <div className="w-full bg-blue-700 h-4 rounded">
+              <div className="bg-blue-500 h-4 rounded" style={{ width: `${(state.players[0].health / state.players[0].maxHealth) * 100}%` }}></div>
+            </div>
+            <p className="text-sm text-blue-200">Health: {state.players[0].health}/{state.players[0].maxHealth}</p>
           </div>
           <div className="bg-red-900 p-2 rounded shadow-md">
-            <h2 className="text-lg text-red-300">Player 2: {state.players[1].archetype}</h2>
-            <div className="w-full bg-red-700 h-4 rounded" />
+            <h2 className="text-lg text-red-300">Player 2: {state.players[1].archetype || 'Unknown'}</h2>
+            <div className="w-full bg-red-700 h-4 rounded">
+              <div className="bg-red-500 h-4 rounded" style={{ width: `${(state.players[1].health / state.players[1].maxHealth) * 100}%` }}></div>
+            </div>
+            <p className="text-sm text-red-200">Health: {state.players[1].health}/{state.players[1].maxHealth}</p>
           </div>
         </div>
         <GameBoard
@@ -311,10 +324,7 @@ const CardBattleGame = () => {
           mana={state.players[state.currentPlayer].mana}
           selectedCard={state.selectedCard}
           currentPlayer={state.currentPlayer}
-          onCardClick={card => {
-            if (state?.gameMode === 'ai' && state?.currentPlayer === 1) return;
-            dispatch({ type: ACTIONS.SELECT_CARD, payload: { card } });
-          }}
+          onCardClick={handleCardClick}
         />
         <div className="flex gap-4 mb-6">
           <button

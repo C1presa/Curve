@@ -88,39 +88,21 @@ const Unit = ({ unit, onClick }) => {
 };
 
 // GameBoard main component
-const GameBoard = React.memo(({ board, onCellClick, currentPlayer, selectedCard, onUnitClick }) => (
-  <div className="bg-gray-900/50 p-4 rounded-xl mb-4 inline-block mx-auto">
-    <div className="border-4 border-gray-700 rounded-lg overflow-hidden">
+const GameBoard = ({ board, setSelectedUnit }) => {
+  return (
+    <div className="grid grid-cols-5 gap-1">
       {board.map((row, rowIndex) => (
-        <div key={rowIndex} className="flex">
-          {row.map((unit, colIndex) => (
-            <Cell
-              key={`${rowIndex}-${colIndex}`}
-              unit={unit}
-              row={rowIndex}
-              col={colIndex}
-              onClick={onCellClick}
-              onUnitClick={onUnitClick}
-              isPlayer1Spawn={rowIndex === 0}
-              isPlayer2Spawn={rowIndex === board.length - 1}
-              isCurrentPlayerSpawn={
-                (rowIndex === 0 && currentPlayer === 0) || 
-                (rowIndex === board.length - 1 && currentPlayer === 1)
-              }
-              selectedCard={selectedCard}
-            />
-          ))}
-        </div>
+        row.map((cell, colIndex) => (
+          <div
+            key={`${rowIndex}-${colIndex}`}
+            className={`border border-gray-600 p-1 h-24 w-24 flex items-center justify-center ${rowIndex < 2 ? 'bg-blue-900' : 'bg-red-900'}`}
+          >
+            {cell ? <UnitDisplay unit={cell} onClick={() => setSelectedUnit(cell)} /> : null}
+          </div>
+        ))
       ))}
     </div>
-    {/* Battle lines indicator */}
-    <div className="mt-3 flex justify-between px-4">
-      <div className="text-xs text-blue-400 font-bold">Player 1 Spawn</div>
-      <div className="text-xs text-gray-500">⚔️ Battlefield ⚔️</div>
-      <div className="text-xs text-red-400 font-bold">Player 2 Spawn</div>
-    </div>
-    <div className="text-xs text-gray-400 text-center mt-1">Click on units to see details</div>
-  </div>
-));
+  );
+};
 
 export default GameBoard; 

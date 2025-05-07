@@ -1,19 +1,20 @@
 // UnitDisplay component for displaying a unit on the battlefield
 import React from 'react';
+import { Tooltip as ReactTooltip } from 'react-tooltip';
 import { ARCHETYPES } from '../gameLogic/helpers';
 
 const UnitDisplay = ({ unit, onClick }) => {
   // Safety check for unit and type
   if (!unit || !unit.type) {
     console.error('Invalid unit:', unit);
-    return <div className="unit-invalid">Invalid Unit</div>;
+    return <div className="unit-invalid text-white">Invalid Unit</div>;
   }
 
   // Get archetype with safety check
   const archetype = ARCHETYPES[unit.type];
   if (!archetype) {
     console.error('Invalid unit type:', unit.type);
-    return <div className="unit-invalid">Invalid Type</div>;
+    return <div className="unit-invalid text-white">Invalid Type</div>;
   }
 
   // Calculate health percentage for the health bar
@@ -23,9 +24,9 @@ const UnitDisplay = ({ unit, onClick }) => {
 
   return (
     <div
-      className="flex flex-col items-center justify-center h-full w-full cursor-pointer bg-gray-800 rounded p-1 shadow hover:scale-105 transition"
+      className="flex flex-col items-center justify-center h-full w-full cursor-pointer bg-gray-800 rounded p-1 shadow-md hover:scale-105 hover:shadow-xl transition duration-300"
       onClick={onClick}
-      title={unit.description}
+      data-tooltip-id={`unit-${unit.id}`}
     >
       <span className="text-2xl mb-1">{archetype ? archetype.icon : '❓'}</span>
       <div className="text-xs text-white truncate font-bold mb-1">{unit.name}</div>
@@ -33,11 +34,17 @@ const UnitDisplay = ({ unit, onClick }) => {
         <span>⚔️ {unit.attack}</span>
         <span>❤️ {unit.health}</span>
       </div>
+      <div className="w-full bg-gray-700 h-1 rounded">
+        <div className={`${healthColor} h-1 rounded`} style={{ width: `${healthPercentage}%` }}></div>
+      </div>
       <div className="flex space-x-1 text-lg">
         {unit.hasTaunt && <span className="text-yellow-400" title="Taunt">🛡️</span>}
         {unit.hasBattlecast && <span className="text-purple-400" title="Battlecast">🔮</span>}
         {unit.hasRage && <span className="text-red-400" title="Rage">💢</span>}
       </div>
+      <ReactTooltip id={`unit-${unit.id}`} effect="solid">
+        <span>{unit.description}</span>
+      </ReactTooltip>
     </div>
   );
 };

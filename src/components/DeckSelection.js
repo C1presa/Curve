@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { ARCHETYPES, generatePreviewDeck } from '../gameLogic/helpers';
 import Card from './Card';
 import CardModal from './CardModal';
+import { Tooltip as ReactTooltip } from 'react-tooltip';
 
 const DeckSelection = ({ onSelectDeck, onBack }) => {
   const [selectedArchetype, setSelectedArchetype] = useState(null);
@@ -88,56 +89,50 @@ const DeckSelection = ({ onSelectDeck, onBack }) => {
               className={`p-6 rounded-xl border-2 cursor-pointer transition-all duration-200 
                 ${selectedArchetype === key 
                   ? `${archetype.color} border-yellow-400 shadow-lg shadow-yellow-400/30` 
-                  : `${archetype.color} border-gray-600 hover:border-gray-400`}`}
+                  : `${archetype.color} border-gray-600 hover:border-gray-400`}`
             >
-              <div className="flex items-center gap-3 mb-3">
-                <span className="text-4xl">{archetype.icon}</span>
-                <h3 className="text-2xl font-bold">{archetype.name}</h3>
+              <div className="flex items-center mb-2">
+                <span className="text-3xl mr-2">{archetype.icon}</span>
+                <h3 className="text-xl text-yellow-400">{archetype.name}</h3>
               </div>
-              <p className="text-gray-300">{archetype.description}</p>
+              <p className="text-gray-400 mb-4">{archetype.description}</p>
+              <div className="flex flex-wrap gap-2">
+                {previewDecks[key].slice(0, 4).map(card => (
+                  <div
+                    key={card.id}
+                    className="bg-gray-700 p-2 rounded shadow w-24 h-32 flex flex-col items-center justify-between cursor-pointer transform transition duration-300 hover:scale-105"
+                    onClick={() => setSelectedArchetype(key)}
+                    data-tooltip-id={`deck-card-${card.id}`}
+                  >
+                    <div className="text-yellow-400 text-sm truncate">{card.name}</div>
+                    <span className="text-2xl">{archetype.icon}</span>
+                    <div className="flex justify-between w-full text-white text-xs">
+                      <span>⚔️ {card.attack}</span>
+                      <span>❤️ {card.health}</span>
+                    </div>
+                    <div className="flex space-x-1 text-sm">
+                      {card.hasTaunt && <span className="text-yellow-400" title="Taunt">🛡️</span>}
+                      {card.hasBattlecast && <span className="text-purple-400" title="Battlecast">🔮</span>}
+                      {card.hasRage && <span className="text-red-400" title="Rage">💢</span>}
+                    </div>
+                    <ReactTooltip id={`deck-card-${card.id}`} effect="solid">
+                      <span>{card.description}</span>
+                    </ReactTooltip>
+                  </div>
+                ))}
+              </div>
+              <button
+                className="mt-4 w-full bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded shadow-md transition duration-300"
+                onClick={handleConfirmSelection}
+              >
+                Select {archetype.name} Deck
+              </button>
             </div>
           ))}
         </div>
-        {/* Deck preview section */}
-        {selectedArchetype && (
-          <div className="bg-gray-800/50 rounded-xl p-6 mb-8">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-3xl font-bold">
-                {ARCHETYPES[selectedArchetype].name} Deck Preview
-              </h2>
-              <div className="flex items-center gap-4">
-                <div className="flex items-center gap-2 bg-gray-700 rounded-lg p-1">
-                  <button
-                    onClick={() => setViewMode('grid')}
-                    className={`px-3 py-1 rounded ${viewMode === 'grid' ? 'bg-blue-600' : 'hover:bg-gray-600'}`}
-                  >
-                    Grid
-                  </button>
-                  <button
-                    onClick={() => setViewMode('list')}
-                    className={`px-3 py-1 rounded ${viewMode === 'list' ? 'bg-blue-600' : 'hover:bg-gray-600'}`}
-                  >
-                    List
-                  </button>
-                </div>
-                <button
-                  onClick={handleConfirmSelection}
-                  className="bg-green-600 hover:bg-green-700 px-6 py-2 rounded-lg font-bold"
-                >
-                  Confirm Selection
-                </button>
-              </div>
-            </div>
-            {renderDeckPreview(selectedArchetype)}
-          </div>
-        )}
-        {/* Expanded card modal */}
-        {expandedCard && (
-          <CardModal card={expandedCard} onClose={() => setExpandedCard(null)} />
-        )}
       </div>
     </div>
   );
 };
 
-export default DeckSelection; 
+export default DeckSelection;
