@@ -62,23 +62,25 @@ export const generateCard = (id, archetypeKey, hasTaunt = false) => {
   let attack, health;
   
   if (hasTaunt) {
-    // For Taunt units, less attack, more health
     attack = Math.max(1, Math.floor(cost * 0.6 + Math.random() * 2));
     health = Math.max(1, Math.floor(cost * 1.4 + Math.random() * 2));
   } else {
-    // Regular stats based on archetype
-    if (archetypeKey === 'orc') {
-      attack = Math.floor(cost * 1.2 + Math.random() * 2);
-      health = Math.floor(cost * 0.8 + Math.random() * 2);
-    } else if (archetypeKey === 'minotaur') {
-      attack = Math.floor(cost * 0.8 + Math.random() * 2);
-      health = Math.floor(cost * 1.3 + Math.random() * 2);
-    } else if (archetypeKey === 'human') {
-      attack = Math.floor(cost * 0.9 + Math.random() * 2);
-      health = Math.floor(cost * 1.1 + Math.random() * 2);
-    } else {
-      attack = Math.floor(cost * 1.0 + Math.random() * 2);
-      health = Math.floor(cost * 1.0 + Math.random() * 2);
+    switch(archetypeKey) {
+      case 'orc': 
+        attack = Math.floor(cost * 1.2 + Math.random() * 2);
+        health = Math.floor(cost * 0.8 + Math.random() * 2);
+        break;
+      case 'minotaur':
+        attack = Math.floor(cost * 0.8 + Math.random() * 2);
+        health = Math.floor(cost * 1.3 + Math.random() * 2);
+        break;
+      case 'human':
+        attack = Math.floor(cost * 0.9 + Math.random() * 2);
+        health = Math.floor(cost * 1.1 + Math.random() * 2);
+        break;
+      default:
+        attack = Math.floor(cost * 1.0 + Math.random() * 2);
+        health = Math.floor(cost * 1.0 + Math.random() * 2);
     }
   }
   
@@ -95,37 +97,40 @@ export const generateCard = (id, archetypeKey, hasTaunt = false) => {
     type: archetypeKey,
     movement: 1,
     hasTaunt,
-    description: hasTaunt ? 'Has Taunt: Enemies must attack this unit first.' : 'Basic unit with no special abilities',
-    effects: []
+    hasBattlecast: false,
+    hasRage: false,
+    description: hasTaunt ? 'Has Taunt: Enemies must attack this unit first.' : 'Basic unit with no special abilities'
   };
 };
 
 // Generate a shuffled deck of 15 cards with Taunt, Battlecast, and Rage
 export const generateDeck = (archetypeKey) => {
   const deck = [];
-  const numTaunt = Math.floor(15 * 0.2); // 20% have Taunt
-  const tauntIndices = new Set();
-  while (tauntIndices.size < numTaunt) {
-    tauntIndices.add(deck.length);
-    deck.push(generateCard(`p${deck.length}_common_${deck.length}`, archetypeKey, true));
+  const tauntCount = Math.floor(15 * 0.2); // 3 taunt cards
+  for (let i = 1; i <= 15; i++) {
+    const hasTaunt = i <= tauntCount;
+    deck.push(generateCard(`p${i}_card`, archetypeKey, hasTaunt));
   }
-  while (deck.length < 15) {
-    deck.push(generateCard(`p${deck.length}_common_${deck.length}`, archetypeKey, false));
-  }
-  // Assign Battlecast and Rage effects
-  const effectIndices = shuffleArray([...Array(15).keys()]).slice(0, 4);
-  // First two: Battlecast
-  for (let i = 0; i < 2; i++) {
-    deck[effectIndices[i]].effects.push({ type: 'battlecast', effect: 'gain_stats', params: { attack: 2, health: 2 } });
-    deck[effectIndices[i]].name += ' Battlecaster';
-    deck[effectIndices[i]].description += ' Battlecast: Gains +2/+2 when played.';
-  }
-  // Next two: Rage
-  for (let i = 2; i < 4; i++) {
-    deck[effectIndices[i]].effects.push({ type: 'rage', effect: 'gain_attack_on_damage', params: { attack: 3 } });
-    deck[effectIndices[i]].name += ' Rager';
-    deck[effectIndices[i]].description += ' Rage: Gains +3 attack when it takes damage.';
-  }
+  // Select 4 unique indices for effects
+  const effectIndices = shuffleArray([...Array(15).keys()]).slice(0,4);
+  // Assign Battlecast to first two
+  deck[effectIndices[0]].hasBattlecast = true;
+  deck[effectIndices[0]].name += ' Battlecaster';
+  deck[effectIndices[0]].description += ' Battlecast: Gains +2/+2 when played.';
+
+  deck[effectIndices[1]].hasBattlecast = true;
+  deck[effectIndices[1]].name += ' Battlecaster';
+  deck[effectIndices[1]].description += ' Battlecast: Gains +2/+2 when played.';
+
+  // Assign Rage to next two
+  deck[effectIndices[2]].hasRage = true;
+  deck[effectIndices[2]].name += ' Rager';
+  deck[effectIndices[2]].description += ' Rage: Gains +3 attack when it takes damage.';
+
+  deck[effectIndices[3]].hasRage = true;
+  deck[effectIndices[3]].name += ' Rager';
+  deck[effectIndices[3]].description += ' Rage: Gains +3 attack when it takes damage.';
+
   // Shuffle deck
   return shuffleArray(deck);
 };
@@ -133,29 +138,32 @@ export const generateDeck = (archetypeKey) => {
 // Generate a preview deck for deck selection (mirrors generateDeck logic)
 export const generatePreviewDeck = (archetypeKey) => {
   const deck = [];
-  const numTaunt = Math.floor(15 * 0.2); // 20% have Taunt
-  const tauntIndices = new Set();
-  while (tauntIndices.size < numTaunt) {
-    tauntIndices.add(deck.length);
-    deck.push(generateCard(`preview_${deck.length}_common_${deck.length}`, archetypeKey, true));
+  const tauntCount = Math.floor(15 * 0.2); // 3 taunt cards
+  for (let i = 1; i <= 15; i++) {
+    const hasTaunt = i <= tauntCount;
+    deck.push(generateCard(`p${i}_card`, archetypeKey, hasTaunt));
   }
-  while (deck.length < 15) {
-    deck.push(generateCard(`preview_${deck.length}_common_${deck.length}`, archetypeKey, false));
-  }
-  // Assign Battlecast and Rage effects
-  const effectIndices = shuffleArray([...Array(15).keys()]).slice(0, 4);
-  // First two: Battlecast
-  for (let i = 0; i < 2; i++) {
-    deck[effectIndices[i]].effects.push({ type: 'battlecast', effect: 'gain_stats', params: { attack: 2, health: 2 } });
-    deck[effectIndices[i]].name += ' Battlecaster';
-    deck[effectIndices[i]].description += ' Battlecast: Gains +2/+2 when played.';
-  }
-  // Next two: Rage
-  for (let i = 2; i < 4; i++) {
-    deck[effectIndices[i]].effects.push({ type: 'rage', effect: 'gain_attack_on_damage', params: { attack: 3 } });
-    deck[effectIndices[i]].name += ' Rager';
-    deck[effectIndices[i]].description += ' Rage: Gains +3 attack when it takes damage.';
-  }
+  // Select 4 unique indices for effects
+  const effectIndices = shuffleArray([...Array(15).keys()]).slice(0,4);
+  // Assign Battlecast to first two
+  deck[effectIndices[0]].hasBattlecast = true;
+  deck[effectIndices[0]].name += ' Battlecaster';
+  deck[effectIndices[0]].description += ' Battlecast: Gains +2/+2 when played.';
+
+  deck[effectIndices[1]].hasBattlecast = true;
+  deck[effectIndices[1]].name += ' Battlecaster';
+  deck[effectIndices[1]].description += ' Battlecast: Gains +2/+2 when played.';
+
+  // Assign Rage to next two
+  deck[effectIndices[2]].hasRage = true;
+  deck[effectIndices[2]].name += ' Rager';
+  deck[effectIndices[2]].description += ' Rage: Gains +3 attack when it takes damage.';
+
+  deck[effectIndices[3]].hasRage = true;
+  deck[effectIndices[3]].name += ' Rager';
+  deck[effectIndices[3]].description += ' Rage: Gains +3 attack when it takes damage.';
+
+  // Return deck (may not shuffle for preview)
   return deck;
 };
 
@@ -373,12 +381,9 @@ export const battleUnits = (state) => {
         newState.log = [...newState.log, `Turn ${state.turn}: ${target.unit.name} is defeated!`];
       } else {
         // Apply Rage effect if present
-        if (newTarget.effects && Array.isArray(newTarget.effects)) {
-          const rage = newTarget.effects.find(e => e.type === 'rage' && e.effect === 'gain_attack_on_damage');
-          if (rage) {
-            newTarget.attack += rage.params.attack;
-            newState.log = [...newState.log, `Turn ${state.turn}: ${newTarget.name} gains +${rage.params.attack} attack from Rage!`];
-          }
+        if (newTarget.hasRage) {
+          newTarget.attack += 3;
+          newState.log = [...newState.log, `Turn ${state.turn}: ${newTarget.name} gains +3 attack from Rage!`];
         }
         newState.board[target.r][target.c] = newTarget;
       }

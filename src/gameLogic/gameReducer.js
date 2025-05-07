@@ -102,11 +102,10 @@ export const gameReducer = (state, action) => {
       let unit = { ...card, playerIndex: currentPlayer, maxHealth: card.health };
       
       // Apply Battlecast effect if present
-      const battlecast = unit.effects && unit.effects.find(e => e.type === 'battlecast' && e.effect === 'gain_stats');
-      if (battlecast) {
-        unit.attack += battlecast.params.attack;
-        unit.health += battlecast.params.health;
-        unit.maxHealth += battlecast.params.health;
+      if (unit.hasBattlecast) {
+        unit.attack += 2;
+        unit.health += 2;
+        unit.maxHealth += 2;
       }
       
       // Place the card

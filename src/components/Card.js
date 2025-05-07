@@ -24,8 +24,8 @@ const Card = React.memo(({ card, onClick, isSelected, isPlayable, isPreview }) =
   }
 
   const isTaunt = card.hasTaunt;
-  const hasBattlecast = card.effects && card.effects.some(e => e.type === 'battlecast');
-  const hasRage = card.effects && card.effects.some(e => e.type === 'rage');
+  const hasBattlecast = card.hasBattlecast;
+  const hasRage = card.hasRage;
   
   return (
     <div 
