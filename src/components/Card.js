@@ -24,6 +24,8 @@ const Card = React.memo(({ card, onClick, isSelected, isPlayable, isPreview }) =
   }
 
   const isTaunt = card.hasTaunt;
+  const hasBattlecast = card.effects && card.effects.some(e => e.type === 'battlecast');
+  const hasRage = card.effects && card.effects.some(e => e.type === 'rage');
   
   return (
     <div 
@@ -53,6 +55,16 @@ const Card = React.memo(({ card, onClick, isSelected, isPlayable, isPreview }) =
           <span className="text-lg">🛡️</span>
         </div>
       )}
+
+      {/* Effect Badges */}
+      <div className="absolute top-2 left-1/2 -translate-x-1/2 flex gap-1 z-10">
+        {hasBattlecast && (
+          <span className="bg-purple-700 text-purple-200 text-[10px] font-bold px-2 py-0.5 rounded-full shadow">Battlecast</span>
+        )}
+        {hasRage && (
+          <span className="bg-red-700 text-red-200 text-[10px] font-bold px-2 py-0.5 rounded-full shadow">Rage</span>
+        )}
+      </div>
 
       {/* Card Content */}
       <div className="h-full flex flex-col p-2">

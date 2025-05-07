@@ -46,6 +46,15 @@ export const ARCHETYPES = {
   }
 };
 
+// Helper to shuffle an array
+function shuffleArray(array) {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+  return array;
+}
+
 // Generate a single card
 export const generateCard = (id, archetypeKey, hasTaunt = false) => {
   const archetype = ARCHETYPES[archetypeKey];
@@ -86,55 +95,67 @@ export const generateCard = (id, archetypeKey, hasTaunt = false) => {
     type: archetypeKey,
     movement: 1,
     hasTaunt,
-    description: hasTaunt ? 'Has Taunt: Enemies must attack this unit first.' : 'Basic unit with no special abilities'
+    description: hasTaunt ? 'Has Taunt: Enemies must attack this unit first.' : 'Basic unit with no special abilities',
+    effects: []
   };
 };
 
-// Generate a preview deck for deck selection
-export const generatePreviewDeck = (archetypeKey) => {
-  const archetype = ARCHETYPES[archetypeKey];
-  const deck = [];
-  const numTaunt = Math.floor(15 * 0.2); // 20% have Taunt
-  const tauntIndices = new Set();
-  
-  // Randomly select which cards will have Taunt
-  while (tauntIndices.size < numTaunt) {
-    tauntIndices.add(Math.floor(Math.random() * 15));
-  }
-  
-  // Generate cards with consistent costs
-  const commonCosts = [1, 2, 2, 3, 3, 3, 4, 4, 4, 5, 5, 6, 6, 7, 8];
-  commonCosts.forEach((cost, i) => {
-    const hasTaunt = tauntIndices.has(i);
-    deck.push(generateCard(`preview_${archetypeKey}_common_${i}`, archetypeKey, hasTaunt));
-  });
-  
-  return deck;
-};
-
-// Generate a shuffled deck of 15 cards
+// Generate a shuffled deck of 15 cards with Taunt, Battlecast, and Rage
 export const generateDeck = (archetypeKey) => {
   const deck = [];
   const numTaunt = Math.floor(15 * 0.2); // 20% have Taunt
   const tauntIndices = new Set();
-  
-  // Randomly select which cards will have Taunt
   while (tauntIndices.size < numTaunt) {
-    tauntIndices.add(Math.floor(Math.random() * 15));
+    tauntIndices.add(deck.length);
+    deck.push(generateCard(`p${deck.length}_common_${deck.length}`, archetypeKey, true));
   }
-  
-  // Generate cards
-  for (let i = 0; i < 15; i++) {
-    const hasTaunt = tauntIndices.has(i);
-    deck.push(generateCard(`p${i}_common_${i}`, archetypeKey, hasTaunt));
+  while (deck.length < 15) {
+    deck.push(generateCard(`p${deck.length}_common_${deck.length}`, archetypeKey, false));
   }
-  
+  // Assign Battlecast and Rage effects
+  const effectIndices = shuffleArray([...Array(15).keys()]).slice(0, 4);
+  // First two: Battlecast
+  for (let i = 0; i < 2; i++) {
+    deck[effectIndices[i]].effects.push({ type: 'battlecast', effect: 'gain_stats', params: { attack: 2, health: 2 } });
+    deck[effectIndices[i]].name += ' Battlecaster';
+    deck[effectIndices[i]].description += ' Battlecast: Gains +2/+2 when played.';
+  }
+  // Next two: Rage
+  for (let i = 2; i < 4; i++) {
+    deck[effectIndices[i]].effects.push({ type: 'rage', effect: 'gain_attack_on_damage', params: { attack: 3 } });
+    deck[effectIndices[i]].name += ' Rager';
+    deck[effectIndices[i]].description += ' Rage: Gains +3 attack when it takes damage.';
+  }
   // Shuffle deck
-  for (let i = deck.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [deck[i], deck[j]] = [deck[j], deck[i]];
+  return shuffleArray(deck);
+};
+
+// Generate a preview deck for deck selection (mirrors generateDeck logic)
+export const generatePreviewDeck = (archetypeKey) => {
+  const deck = [];
+  const numTaunt = Math.floor(15 * 0.2); // 20% have Taunt
+  const tauntIndices = new Set();
+  while (tauntIndices.size < numTaunt) {
+    tauntIndices.add(deck.length);
+    deck.push(generateCard(`preview_${deck.length}_common_${deck.length}`, archetypeKey, true));
   }
-  
+  while (deck.length < 15) {
+    deck.push(generateCard(`preview_${deck.length}_common_${deck.length}`, archetypeKey, false));
+  }
+  // Assign Battlecast and Rage effects
+  const effectIndices = shuffleArray([...Array(15).keys()]).slice(0, 4);
+  // First two: Battlecast
+  for (let i = 0; i < 2; i++) {
+    deck[effectIndices[i]].effects.push({ type: 'battlecast', effect: 'gain_stats', params: { attack: 2, health: 2 } });
+    deck[effectIndices[i]].name += ' Battlecaster';
+    deck[effectIndices[i]].description += ' Battlecast: Gains +2/+2 when played.';
+  }
+  // Next two: Rage
+  for (let i = 2; i < 4; i++) {
+    deck[effectIndices[i]].effects.push({ type: 'rage', effect: 'gain_attack_on_damage', params: { attack: 3 } });
+    deck[effectIndices[i]].name += ' Rager';
+    deck[effectIndices[i]].description += ' Rage: Gains +3 attack when it takes damage.';
+  }
   return deck;
 };
 
@@ -333,7 +354,7 @@ export const battleUnits = (state) => {
       const originalHealth = target.unit.health;
       const damageDealt = unit.attack;
       const isOnSpawnRow = target.r === opponentSpawnRow;
-      const newTarget = { ...target.unit, health: target.unit.health - damageDealt };
+      let newTarget = { ...target.unit, health: target.unit.health - damageDealt };
       
       if (isOnSpawnRow && newTarget.health <= 0) {
         const excessDamage = damageDealt - originalHealth;
@@ -351,6 +372,14 @@ export const battleUnits = (state) => {
         newState.board[target.r][target.c] = null;
         newState.log = [...newState.log, `Turn ${state.turn}: ${target.unit.name} is defeated!`];
       } else {
+        // Apply Rage effect if present
+        if (newTarget.effects && Array.isArray(newTarget.effects)) {
+          const rage = newTarget.effects.find(e => e.type === 'rage' && e.effect === 'gain_attack_on_damage');
+          if (rage) {
+            newTarget.attack += rage.params.attack;
+            newState.log = [...newState.log, `Turn ${state.turn}: ${newTarget.name} gains +${rage.params.attack} attack from Rage!`];
+          }
+        }
         newState.board[target.r][target.c] = newTarget;
       }
     }

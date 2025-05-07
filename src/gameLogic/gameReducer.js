@@ -97,13 +97,21 @@ export const gameReducer = (state, action) => {
         return { ...state, message: 'Cell occupied!' };
       }
       
+      // Prepare the unit to place
+      const card = state.selectedCard;
+      let unit = { ...card, playerIndex: currentPlayer, maxHealth: card.health };
+      
+      // Apply Battlecast effect if present
+      const battlecast = unit.effects && unit.effects.find(e => e.type === 'battlecast' && e.effect === 'gain_stats');
+      if (battlecast) {
+        unit.attack += battlecast.params.attack;
+        unit.health += battlecast.params.health;
+        unit.maxHealth += battlecast.params.health;
+      }
+      
       // Place the card
       const newBoard = state.board.map(row => [...row]);
-      newBoard[row][col] = {
-        ...state.selectedCard,
-        playerIndex: currentPlayer,
-        maxHealth: state.selectedCard.health
-      };
+      newBoard[row][col] = unit;
       
       // Update player state
       const player = state.players[currentPlayer];
