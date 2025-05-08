@@ -27,24 +27,36 @@ const DeckSelection = ({ onSelectDeck, onBack }) => {
 
   // Render deck preview
   const renderDeckPreview = (archetypeKey) => {
-    const deck = previewDecks[archetypeKey];
-    if (!deck || !Array.isArray(deck)) {
+    if (!archetypeKey || !previewDecks[archetypeKey]) {
       return <div className="text-gray-500">No cards available for this deck.</div>;
     }
+
+    const deck = previewDecks[archetypeKey];
+    if (!Array.isArray(deck)) {
+      console.error('Invalid deck format:', deck);
+      return <div className="text-red-500">Error: Invalid deck format</div>;
+    }
+
     return (
       <div className="space-y-6">
         <div>
-          <h3 className="text-xl font-bold text-white mb-3">Deck Cards (15)</h3>
+          <h3 className="text-xl font-bold text-white mb-3">Deck Cards ({deck.length})</h3>
           <div className={`${viewMode === 'grid' ? 'grid grid-cols-5 gap-4' : 'space-y-2'}`}>
-            {deck.map((card, index) => (
-              <div 
-                key={index} 
-                className="cursor-pointer transform transition-transform hover:scale-105"
-                onClick={() => setExpandedCard(card)}
-              >
-                <CardDisplay card={card} />
-              </div>
-            ))}
+            {deck.map((card, index) => {
+              if (!card || !card.type) {
+                console.error('Invalid card in deck:', card);
+                return null;
+              }
+              return (
+                <div 
+                  key={`${card.type}-${index}`}
+                  className="cursor-pointer transform transition-transform hover:scale-105"
+                  onClick={() => setExpandedCard(card)}
+                >
+                  <CardDisplay card={card} />
+                </div>
+              );
+            })}
           </div>
         </div>
       </div>
@@ -89,7 +101,7 @@ const DeckSelection = ({ onSelectDeck, onBack }) => {
           <div className="bg-gray-800/50 rounded-xl p-6 mb-8">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-3xl font-bold">
-                {ARCHETYPES[selectedArchetype].name} Deck Preview
+                {ARCHETYPES[selectedArchetype]?.name || 'Selected'} Deck Preview
               </h2>
               <div className="flex items-center gap-4">
                 <div className="flex items-center gap-2 bg-gray-700 rounded-lg p-1">
@@ -108,7 +120,12 @@ const DeckSelection = ({ onSelectDeck, onBack }) => {
                 </div>
                 <button
                   onClick={handleConfirmSelection}
-                  className="bg-green-600 hover:bg-green-700 px-6 py-2 rounded-lg font-bold"
+                  disabled={!selectedArchetype}
+                  className={`px-6 py-2 rounded-lg font-bold ${
+                    selectedArchetype 
+                      ? 'bg-green-600 hover:bg-green-700' 
+                      : 'bg-gray-600 cursor-not-allowed'
+                  }`}
                 >
                   Confirm Selection
                 </button>
