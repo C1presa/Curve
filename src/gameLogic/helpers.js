@@ -271,9 +271,31 @@ export const advanceUnits = (state) => {
     
     // Try to move if space is empty
     if (newRow >= 0 && newRow < ROWS && !newState.board[newRow][col]) {
-      newState.board[newRow][col] = unit;
-      newState.board[row][col] = null;
-      newState.log = [...newState.log, `Turn ${state.turn}: ${unit.name} moved to ${newRow},${col}`];
+      // Check adjacent cells for enemy Taunt
+      let canMove = true;
+      const adjacentTiles = [
+        { r: newRow - 1, c: col }, // Up
+        { r: newRow + 1, c: col }, // Down
+        { r: newRow, c: col - 1 }, // Left
+        { r: newRow, c: col + 1 }  // Right
+      ];
+      
+      for (const { r, c } of adjacentTiles) {
+        if (r >= 0 && r < ROWS && c >= 0 && c < COLS) {
+          const adjUnit = newState.board[r][c];
+          if (adjUnit && adjUnit.playerIndex !== currentPlayer && adjUnit.hasTaunt) {
+            canMove = false;
+            newState.log = [...newState.log, `Turn ${state.turn}: ${unit.name} cannot move due to enemy Taunt unit ${adjUnit.name} at ${r},${c}`];
+            break;
+          }
+        }
+      }
+      
+      if (canMove) {
+        newState.board[newRow][col] = unit;
+        newState.board[row][col] = null;
+        newState.log = [...newState.log, `Turn ${state.turn}: ${unit.name} moved to ${newRow},${col}`];
+      }
     }
   });
   
