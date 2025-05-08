@@ -1,13 +1,12 @@
 // DeckSelection component for choosing a deck/archetype and previewing cards
 import React, { useState, useEffect } from 'react';
 import { ARCHETYPES, generatePreviewDeck } from '../gameLogic/helpers';
-import Card from './Card';
-import CardModal from './CardModal';
 import CardDisplay from './CardDisplay';
+import CardModal from './CardModal';
 
 const DeckSelection = ({ onSelectDeck, onBack }) => {
   const [selectedArchetype, setSelectedArchetype] = useState(null);
-  const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'list'
+  const [viewMode, setViewMode] = useState('grid');
   const [previewDecks, setPreviewDecks] = useState({});
   const [expandedCard, setExpandedCard] = useState(null);
 
@@ -29,38 +28,22 @@ const DeckSelection = ({ onSelectDeck, onBack }) => {
   // Render deck preview
   const renderDeckPreview = (archetypeKey) => {
     const deck = previewDecks[archetypeKey];
-    if (!deck) return null;
+    if (!deck || !Array.isArray(deck)) {
+      return <div className="text-gray-500">No cards available for this deck.</div>;
+    }
     return (
       <div className="space-y-6">
         <div>
           <h3 className="text-xl font-bold text-white mb-3">Deck Cards (15)</h3>
           <div className={`${viewMode === 'grid' ? 'grid grid-cols-5 gap-4' : 'space-y-2'}`}>
-            {deck.map(card => (
-              viewMode === 'grid' ? (
-                <Card 
-                  key={card.id} 
-                  card={card} 
-                  archetype={archetypeKey}
-                  onClick={setExpandedCard}
-                />
-              ) : (
-                <div 
-                  key={card.id} 
-                  className="bg-gray-800 p-3 rounded-lg flex items-center justify-between hover:bg-gray-700 cursor-pointer"
-                  onClick={() => setExpandedCard(card)}
-                >
-                  <div className="flex items-center gap-4">
-                    <div className="bg-blue-700 w-8 h-8 rounded-full flex items-center justify-center">
-                      <span className="text-white font-bold">{card.cost}</span>
-                    </div>
-                    <span className="text-white font-bold">{card.name}</span>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <span className="text-red-400">⚔️ {card.attack}</span>
-                    <span className="text-green-400">❤️ {card.health}</span>
-                  </div>
-                </div>
-              )
+            {deck.map((card, index) => (
+              <div 
+                key={index} 
+                className="cursor-pointer transform transition-transform hover:scale-105"
+                onClick={() => setExpandedCard(card)}
+              >
+                <CardDisplay card={card} />
+              </div>
             ))}
           </div>
         </div>
@@ -69,28 +52,41 @@ const DeckSelection = ({ onSelectDeck, onBack }) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center">
-      <div className="bg-white p-6 rounded-lg shadow-lg w-3/4">
-        <h2 className="text-2xl font-bold mb-4">Select Your Deck</h2>
-        <div className="grid grid-cols-4 gap-4">
+    <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 text-white p-4">
+      <div className="max-w-7xl mx-auto">
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-4xl font-bold">Choose Your Deck</h1>
+          <button
+            onClick={onBack}
+            className="bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded-lg"
+          >
+            Back to Menu
+          </button>
+        </div>
+        
+        {/* Archetype selection */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           {Object.entries(ARCHETYPES).map(([key, archetype]) => (
             <div
               key={key}
-              className="bg-gray-100 p-4 rounded cursor-pointer hover:bg-gray-200"
+              className={`p-6 rounded-xl border-2 cursor-pointer transition-all duration-200 
+                ${selectedArchetype === key 
+                  ? `${archetype.color} border-yellow-400 shadow-lg shadow-yellow-400/30` 
+                  : `${archetype.color} border-gray-600 hover:border-gray-400`}`}
               onClick={() => setSelectedArchetype(key)}
             >
-              <div className="font-bold">{archetype.name}</div>
-              <div>Archetype: {key}</div>
-              <div className="grid grid-cols-3 gap-2 mt-2">
-                {previewDecks[key].map((card, index) => (
-                  <CardDisplay key={index} card={card} />
-                ))}
+              <div className="flex items-center gap-3 mb-3">
+                <span className="text-4xl">{archetype.icon}</span>
+                <h3 className="text-2xl font-bold">{archetype.name}</h3>
               </div>
+              <p className="text-gray-300">{archetype.description}</p>
             </div>
           ))}
         </div>
+
+        {/* Deck preview section */}
         {selectedArchetype && (
-          <div className="mt-4">
+          <div className="bg-gray-800/50 rounded-xl p-6 mb-8">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-3xl font-bold">
                 {ARCHETYPES[selectedArchetype].name} Deck Preview
@@ -121,6 +117,8 @@ const DeckSelection = ({ onSelectDeck, onBack }) => {
             {renderDeckPreview(selectedArchetype)}
           </div>
         )}
+
+        {/* Expanded card modal */}
         {expandedCard && (
           <CardModal card={expandedCard} onClose={() => setExpandedCard(null)} />
         )}
