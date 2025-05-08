@@ -2,44 +2,71 @@
 import React from 'react';
 import { ARCHETYPES } from '../gameLogic/helpers';
 
-const Card = ({ card, selected, onClick, disabled }) => {
+const Card = ({ card, isSelected, onClick }) => {
   const archetype = ARCHETYPES[card.type];
+  const playerBorder = card.playerIndex === 0 ? 'border-blue-500' : 'border-red-500';
+
   return (
     <div
-      onClick={() => !disabled && onClick(card)}
-      className={`w-28 h-40 border-2 rounded-xl relative overflow-hidden transition-all duration-200 transform 
-        ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:scale-105 hover:-translate-y-1'}
-        ${selected ? `border-yellow-400 shadow-lg ${archetype.highlightColor}` : 'border-gray-600'}
-        ${archetype.color}
+      className={`
+        relative w-20 h-28 cursor-pointer
+        transition-all duration-200 border-4 ${playerBorder}
+        ${isSelected ? 'scale-110 shadow-lg' : 'hover:scale-105'}
+        overflow-hidden rounded-lg
       `}
+      onClick={onClick}
     >
-      {/* Cost badge */}
-      <div className="absolute top-1 left-1 w-8 h-8 bg-blue-700 rounded-full flex items-center justify-center border-2 border-blue-400">
-        <span className="text-white font-bold">{card.cost}</span>
+      {/* Top third - Archetype color with icon */}
+      <div className={`w-full h-1/3 flex items-center justify-center bg-gradient-to-br ${archetype.unitColor}`}>
+        <span className="text-xl">{archetype.icon}</span>
       </div>
-      {/* Archetype icon */}
-      <div className="absolute top-1 right-1 text-2xl">
-        {archetype.icon}
+
+      {/* Bottom two thirds - Dark theme */}
+      <div className="w-full h-2/3 bg-gray-800 flex flex-col items-center justify-between p-1">
+        {/* Mana Cost - Upper Right */}
+        <div className="absolute top-1 right-1 bg-blue-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold shadow-lg">
+          {card.cost}
+        </div>
+
+        {/* Card Name */}
+        <div className="text-center px-1 pt-1">
+          <div className="font-bold text-xs truncate text-white">{card.name}</div>
+        </div>
+
+        {/* Stats Bar - Bottom */}
+        <div className="w-full bg-black/50 text-white text-xs px-1 py-0.5 flex justify-between">
+          <span className="text-red-400">⚔️ {card.attack}</span>
+          <span className="text-green-400">❤️ {card.health}</span>
+        </div>
       </div>
-      {/* Taunt indicator */}
-      {card.hasTaunt && (
-        <div className="absolute top-8 right-1 text-xl" title="Taunt: Enemies must attack this unit first">
-          🛡️
-        </div>
-      )}
-      {/* Card content */}
-      <div className="mt-10 px-2">
-        <div className="text-sm font-bold text-white text-center mb-1 truncate">
-          {card.name}
-        </div>
-        <div className="absolute bottom-2 left-2 right-2">
-          <div className="flex justify-between text-white">
-            <div className="bg-red-700/80 px-2 py-1 rounded">
-              <span className="text-xs font-bold">⚔️ {card.attack}</span>
+
+      {/* Hover Tooltip */}
+      <div className="absolute z-50 bg-gray-900/95 p-2 rounded-lg shadow-xl -top-2 left-full ml-2 w-40 border border-gray-700 opacity-0 group-hover:opacity-100 transition-opacity">
+        <div className="font-bold text-yellow-400 text-sm mb-1">{card.name}</div>
+        <div className="text-xs space-y-1">
+          <div className="flex justify-between">
+            <span className="text-gray-400">Type:</span>
+            <span className="text-white">{archetype.name}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-gray-400">Cost:</span>
+            <span className="text-blue-400">{card.cost}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-gray-400">Attack:</span>
+            <span className="text-red-400">{card.attack}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-gray-400">Health:</span>
+            <span className="text-green-400">{card.health}</span>
+          </div>
+          {card.hasTaunt && (
+            <div className="text-yellow-400 text-xs mt-1">
+              🛡️ Has Taunt
             </div>
-            <div className="bg-green-700/80 px-2 py-1 rounded">
-              <span className="text-xs font-bold">❤️ {card.health}</span>
-            </div>
+          )}
+          <div className="text-gray-400 text-xs mt-1">
+            {card.description}
           </div>
         </div>
       </div>
@@ -47,4 +74,4 @@ const Card = ({ card, selected, onClick, disabled }) => {
   );
 };
 
-export default React.memo(Card); 
+export default Card; 

@@ -27,11 +27,6 @@ const UnitDisplay = ({ unit }) => {
 
       {/* Bottom two thirds - Dark theme */}
       <div className="w-full h-2/3 bg-gray-800 flex flex-col items-center justify-between p-2">
-        {/* Unit Name */}
-        <div className="text-center px-2">
-          <div className="font-bold text-sm truncate text-white">{unit.name}</div>
-        </div>
-
         {/* Mana Cost - Upper Right */}
         <div className="absolute top-1 right-1 bg-blue-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold shadow-lg">
           {unit.cost}
