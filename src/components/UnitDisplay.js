@@ -7,18 +7,24 @@ const UnitDisplay = ({ unit }) => {
   const archetype = ARCHETYPES[unit.type];
   const healthPercent = (unit.health / unit.maxHealth) * 100;
   const isDamaged = unit.health < unit.maxHealth;
+  const playerBorder = unit.playerIndex === 0 ? 'border-blue-500' : 'border-red-500';
 
   return (
     <div
       className={`
         relative w-full h-full flex flex-col items-center justify-center
         bg-gradient-to-br ${archetype.unitColor} rounded-lg
-        transition-all duration-200
+        transition-all duration-200 border-2 ${playerBorder}
         ${showDetails ? 'scale-105 shadow-lg' : ''}
       `}
       onMouseEnter={() => setShowDetails(true)}
       onMouseLeave={() => setShowDetails(false)}
     >
+      {/* Archetype Icon - Top Left */}
+      <div className="absolute top-1 left-1 text-2xl">
+        {archetype.icon}
+      </div>
+
       {/* Unit Name */}
       <div className="text-center px-2">
         <div className="font-bold text-sm truncate">{unit.name}</div>
