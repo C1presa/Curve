@@ -43,39 +43,37 @@ const Cell = React.memo(({ unit, row, col, onClick, onUnitClick, isSpawnRow, isP
 });
 
 // GameBoard main component
-const GameBoard = React.memo(({ board, onCellClick, currentPlayer, selectedCard, onUnitClick }) => (
-  <div className="bg-gray-900/50 p-4 rounded-xl mb-4 inline-block mx-auto">
-    <div className="border-4 border-gray-700 rounded-lg overflow-hidden">
-      {board.map((row, rowIndex) => (
-        <div key={rowIndex} className="flex">
-          {row.map((unit, colIndex) => (
-            <Cell
-              key={`${rowIndex}-${colIndex}`}
-              unit={unit}
-              row={rowIndex}
-              col={colIndex}
-              onClick={onCellClick}
-              onUnitClick={onUnitClick}
-              isPlayer1Spawn={rowIndex === 0}
-              isPlayer2Spawn={rowIndex === board.length - 1}
-              isCurrentPlayerSpawn={
-                (rowIndex === 0 && currentPlayer === 0) || 
-                (rowIndex === board.length - 1 && currentPlayer === 1)
-              }
-              selectedCard={selectedCard}
-            />
-          ))}
-        </div>
-      ))}
+const GameBoard = ({ board, onCellClick, onUnitClick, currentPlayer, selectedCard }) => {
+  return (
+    <div className="w-full h-full grid grid-cols-7 gap-1 bg-gray-800/50 p-2 rounded-xl">
+      {board.map((row, rowIndex) =>
+        row.map((unit, colIndex) => (
+          <div
+            key={`${rowIndex}-${colIndex}`}
+            className={`
+              aspect-square relative rounded-lg overflow-hidden
+              ${!unit ? 'bg-gray-700/50 hover:bg-gray-600/50 cursor-pointer' : 'bg-gray-700'}
+              ${selectedCard && !unit && rowIndex === (currentPlayer === 0 ? 0 : 4) ? 'ring-2 ring-yellow-400' : ''}
+              transition-all duration-200
+            `}
+            onClick={() => onCellClick(rowIndex, colIndex)}
+          >
+            {unit && (
+              <div 
+                className="w-full h-full"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onUnitClick(unit);
+                }}
+              >
+                <UnitDisplay unit={unit} />
+              </div>
+            )}
+          </div>
+        ))
+      )}
     </div>
-    {/* Battle lines indicator */}
-    <div className="mt-3 flex justify-between px-4">
-      <div className="text-xs text-blue-400 font-bold">Player 1 Spawn</div>
-      <div className="text-xs text-gray-500">⚔️ Battlefield ⚔️</div>
-      <div className="text-xs text-red-400 font-bold">Player 2 Spawn</div>
-    </div>
-    <div className="text-xs text-gray-400 text-center mt-1">Click on units to see details</div>
-  </div>
-));
+  );
+};
 
 export default GameBoard; 

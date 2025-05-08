@@ -67,6 +67,13 @@ const CardBattleGame = () => {
   const timeoutRefs = useRef([]);
   const logRef = useRef(null);
   
+  // Get background color based on current player's archetype
+  const getBackgroundClass = useCallback(() => {
+    if (!state) return 'bg-gray-900';
+    const currentArchetype = state.players[state.currentPlayer].archetype;
+    return `bg-gradient-to-b from-${ARCHETYPES[currentArchetype].color} to-gray-900`;
+  }, [state]);
+  
   // Cleanup timeouts on unmount
   useEffect(() => {
     return () => {
@@ -269,8 +276,8 @@ const CardBattleGame = () => {
 
   // Game UI rendering
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 text-white p-4">
-      <div className="max-w-6xl mx-auto">
+    <div className={`min-h-screen ${getBackgroundClass()} text-white p-4`}>
+      <div className="max-w-7xl mx-auto">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent">
             CURVE GAME
@@ -359,16 +366,18 @@ const CardBattleGame = () => {
             </div>
             
             {/* Game Board */}
-            <GameBoard
-              board={state.board}
-              onCellClick={(row, col) => {
-                if (!state?.selectedCard) return;
-                dispatch({ type: ACTIONS.PLACE_CARD, payload: { row, col } });
-              }}
-              onUnitClick={setSelectedUnit}
-              currentPlayer={state.currentPlayer}
-              selectedCard={state.selectedCard}
-            />
+            <div className="w-full aspect-[7/5] max-w-4xl mx-auto mb-6">
+              <GameBoard
+                board={state.board}
+                onCellClick={(row, col) => {
+                  if (!state?.selectedCard) return;
+                  dispatch({ type: ACTIONS.PLACE_CARD, payload: { row, col } });
+                }}
+                onUnitClick={setSelectedUnit}
+                currentPlayer={state.currentPlayer}
+                selectedCard={state.selectedCard}
+              />
+            </div>
             
             {/* Current Player's Hand */}
             <PlayerHand
