@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { FaShieldAlt, FaSword, FaHeart } from 'react-icons/fa';
+import { FaShieldAlt, FaBolt, FaHeart } from 'react-icons/fa';
 import { ARCHETYPES } from '../gameLogic/helpers';
 
 const CardDisplay = ({ card, isHand = false }) => {
@@ -48,7 +48,7 @@ const CardDisplay = ({ card, isHand = false }) => {
             isHand ? 'w-5 h-5 text-[10px]' : 'w-6 h-6 text-xs'
           } flex items-center justify-center`}
         >
-          <FaSword className={`inline mr-0.5 ${isHand ? 'text-[10px]' : 'text-xs'}`} />
+          <FaBolt className={`inline mr-0.5 ${isHand ? 'text-[10px]' : 'text-xs'}`} />
           {card.attack}
         </div>
         <div

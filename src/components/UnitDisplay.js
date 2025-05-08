@@ -1,6 +1,6 @@
 // UnitDisplay component for displaying a unit on the battlefield
 import React, { useState } from 'react';
-import { FaShieldAlt, FaSword, FaHeart } from 'react-icons/fa';
+import { FaShieldAlt, FaBolt, FaHeart } from 'react-icons/fa';
 
 const UnitDisplay = ({ unit }) => {
   const [showDetails, setShowDetails] = useState(false);
@@ -28,7 +28,7 @@ const UnitDisplay = ({ unit }) => {
       </div>
       <div className="h-2/3 bg-gray-800 relative">
         <div className="absolute bottom-1 left-1 bg-yellow-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs">
-          <FaSword className="inline mr-1 text-xs" />
+          <FaBolt className="inline mr-1 text-xs" />
           {unit.attack}
         </div>
         <div className="absolute bottom-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs">
