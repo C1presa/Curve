@@ -1,114 +1,50 @@
-// Card component for displaying cards in hand and deck preview
+// Card component for displaying a card in hand or deck
 import React from 'react';
 import { ARCHETYPES } from '../gameLogic/helpers';
 
-const Card = React.memo(({ card, onClick, isSelected, isPlayable, isPreview }) => {
-  // Safety check for invalid card types
-  if (!card || !card.type) {
-    console.error('Invalid card:', card);
-    return (
-      <div className="w-32 h-48 rounded-xl bg-gray-800 border-2 border-red-500 flex items-center justify-center">
-        <span className="text-red-500 text-xs text-center">Invalid Card</span>
-      </div>
-    );
-  }
-
+const Card = ({ card, selected, onClick, disabled }) => {
   const archetype = ARCHETYPES[card.type];
-  if (!archetype) {
-    console.error(`Invalid card type: ${card.type}`, card);
-    return (
-      <div className="w-32 h-48 rounded-xl bg-gray-800 border-2 border-red-500 flex items-center justify-center">
-        <span className="text-red-500 text-xs text-center">Invalid Type: {card.type}</span>
-      </div>
-    );
-  }
-
-  const isTaunt = card.hasTaunt;
-  const hasBattlecast = card.hasBattlecast;
-  const hasRage = card.hasRage;
-  
   return (
-    <div 
-      onClick={onClick}
-      className={`relative w-32 h-48 rounded-xl transition-all duration-200 cursor-pointer
-        ${isSelected ? 'scale-110 z-20' : 'hover:scale-105 hover:z-10'}
-        ${isPlayable ? 'hover:shadow-lg hover:shadow-green-500/50' : 'opacity-50'}
-        ${isPreview ? 'bg-gradient-to-br from-gray-800 to-gray-900' : 'bg-gradient-to-br from-gray-900 to-black'}
-        border-4 ${isTaunt ? 'border-yellow-400' : 'border-gray-700'}
-        shadow-xl
+    <div
+      onClick={() => !disabled && onClick(card)}
+      className={`w-28 h-40 border-2 rounded-xl relative overflow-hidden transition-all duration-200 transform 
+        ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:scale-105 hover:-translate-y-1'}
+        ${selected ? `border-yellow-400 shadow-lg ${archetype.highlightColor}` : 'border-gray-600'}
+        ${archetype.color}
       `}
     >
-      {/* Cost Circle */}
-      <div className="absolute -top-3 -left-3 w-8 h-8 rounded-full 
-        bg-gradient-to-br from-blue-600 to-blue-800 
-        border-2 border-blue-400 flex items-center justify-center
-        shadow-lg z-10">
+      {/* Cost badge */}
+      <div className="absolute top-1 left-1 w-8 h-8 bg-blue-700 rounded-full flex items-center justify-center border-2 border-blue-400">
         <span className="text-white font-bold">{card.cost}</span>
       </div>
-
-      {/* Taunt Shield Badge */}
-      {isTaunt && (
-        <div className="absolute -top-3 -right-3 w-8 h-8 rounded-full 
-          bg-gradient-to-br from-yellow-400 to-yellow-600
-          border-2 border-yellow-500 flex items-center justify-center
-          shadow-lg z-10 transform rotate-12">
-          <span className="text-lg">🛡️</span>
+      {/* Archetype icon */}
+      <div className="absolute top-1 right-1 text-2xl">
+        {archetype.icon}
+      </div>
+      {/* Taunt indicator */}
+      {card.hasTaunt && (
+        <div className="absolute top-8 right-1 text-xl" title="Taunt: Enemies must attack this unit first">
+          🛡️
         </div>
       )}
-
-      {/* Effect Badges */}
-      <div className="absolute top-2 left-1/2 -translate-x-1/2 flex gap-1 z-10">
-        {hasBattlecast && (
-          <span className="bg-purple-700 text-purple-200 text-[10px] font-bold px-2 py-0.5 rounded-full shadow">Battlecast</span>
-        )}
-        {hasRage && (
-          <span className="bg-red-700 text-red-200 text-[10px] font-bold px-2 py-0.5 rounded-full shadow">Rage</span>
-        )}
-      </div>
-
-      {/* Card Content */}
-      <div className="h-full flex flex-col p-2">
-        {/* Archetype Icon */}
-        <div className="flex justify-center items-center h-16">
-          <span className="text-4xl">{archetype.icon}</span>
+      {/* Card content */}
+      <div className="mt-10 px-2">
+        <div className="text-sm font-bold text-white text-center mb-1 truncate">
+          {card.name}
         </div>
-
-        {/* Card Name */}
-        <div className="text-center mb-2">
-          <div className="text-sm font-bold text-white truncate">
-            {card.name}
-          </div>
-          {isTaunt && (
-            <div className="text-xs text-yellow-300 font-semibold">
-              Taunt
+        <div className="absolute bottom-2 left-2 right-2">
+          <div className="flex justify-between text-white">
+            <div className="bg-red-700/80 px-2 py-1 rounded">
+              <span className="text-xs font-bold">⚔️ {card.attack}</span>
             </div>
-          )}
-        </div>
-
-        {/* Card Description */}
-        <div className="text-xs text-gray-300 text-center mb-2 flex-grow">
-          {card.description}
-        </div>
-
-        {/* Stats Panel */}
-        <div className="flex justify-around items-center bg-black/50 rounded-lg p-1">
-          <div className="flex items-center gap-1">
-            <span className="text-red-400">⚔️</span>
-            <span className="text-white font-bold">{card.attack}</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <span className="text-green-400">❤️</span>
-            <span className="text-white font-bold">{card.health}</span>
+            <div className="bg-green-700/80 px-2 py-1 rounded">
+              <span className="text-xs font-bold">❤️ {card.health}</span>
+            </div>
           </div>
         </div>
       </div>
-
-      {/* Playable Indicator */}
-      {isPlayable && (
-        <div className="absolute inset-0 border-2 border-green-500 rounded-xl animate-pulse" />
-      )}
     </div>
   );
-});
+};
 
-export default Card; 
+export default React.memo(Card); 

@@ -8,7 +8,6 @@ import PlayerHand from './components/PlayerHand';
 import CardModal from './components/CardModal';
 import DeckSelection from './components/DeckSelection';
 import GameMenu from './components/GameMenu';
-import { initialState } from './gameLogic/gameReducer';
 
 // Game Constants
 const ROWS = 5;
@@ -58,25 +57,10 @@ class ErrorBoundary extends React.Component {
   }
 }
 
-const getBackgroundClass = (archetype) => {
-  switch (archetype) {
-    case 'orc':
-      return 'bg-gradient-to-br from-green-900 via-yellow-900 to-green-900';
-    case 'undead':
-      return 'bg-gradient-to-br from-purple-900 via-gray-900 to-purple-900';
-    case 'human':
-      return 'bg-gradient-to-br from-blue-900 via-gray-700 to-blue-900';
-    case 'minotaur':
-      return 'bg-gradient-to-br from-red-900 via-orange-800 to-red-900';
-    default:
-      return 'bg-gray-900';
-  }
-};
-
 // Main Game Component
 const CardBattleGame = () => {
+  const [state, dispatch] = useReducer(gameReducer, null);
   const [gameMode, setGameMode] = useState('menu');
-  const [state, dispatch] = useReducer(gameReducer, initializeGame('minotaur', 'orc'));
   const [selectedUnit, setSelectedUnit] = useState(null);
   const [playerDeckChoices, setPlayerDeckChoices] = useState({ player1: null, player2: null });
   const [deckSelectionPhase, setDeckSelectionPhase] = useState(null);
@@ -228,9 +212,8 @@ const CardBattleGame = () => {
       
       if (gameMode === 'ai') {
         // AI randomly selects a deck
-        const aiArchetype = ['orc', 'undead', 'human', 'minotaur'].filter(a => a !== archetype)[
-          Math.floor(Math.random() * 3)
-        ];
+        const archetypes = Object.keys(ARCHETYPES);
+        const aiArchetype = archetypes[Math.floor(Math.random() * archetypes.length)];
         
         // Start game immediately for AI mode
         const initialState = initializeGame(archetype, aiArchetype);
@@ -284,85 +267,210 @@ const CardBattleGame = () => {
     return null;
   }
 
-  const handleCardClick = (card) => {
-    if (state?.gameMode === 'ai' && state?.currentPlayer === 1) return;
-    dispatch({ type: ACTIONS.SELECT_CARD, payload: { card } });
-  };
-
   // Game UI rendering
   return (
-    <div className={`min-h-screen ${getBackgroundClass(state.players[0].archetype)} flex justify-center items-center transition-all duration-500`}>
-      <div className="max-w-4xl w-full p-4">
-        <div className="flex justify-between mb-4">
-          <div className="bg-blue-900 p-2 rounded shadow-md">
-            <h2 className="text-lg text-blue-300">Player 1: {state.players[0].archetype}</h2>
-            <div className="w-full bg-blue-700 h-4 rounded">
-              <div className="bg-blue-500 h-4 rounded" style={{ width: `${(state.players[0].health / state.players[0].maxHealth) * 100}%` }}></div>
-            </div>
-            <p className="text-sm text-blue-200">Health: {state.players[0].health}/{state.players[0].maxHealth}</p>
-          </div>
-          <div className="bg-red-900 p-2 rounded shadow-md">
-            <h2 className="text-lg text-red-300">Player 2: {state.players[1].archetype || 'Unknown'}</h2>
-            <div className="w-full bg-red-700 h-4 rounded">
-              <div className="bg-red-500 h-4 rounded" style={{ width: `${(state.players[1].health / state.players[1].maxHealth) * 100}%` }}></div>
-            </div>
-            <p className="text-sm text-red-200">Health: {state.players[1].health}/{state.players[1].maxHealth}</p>
-          </div>
-        </div>
-        <GameBoard
-          board={state.board}
-          onCellClick={(row, col) => {
-            if (!state?.selectedCard) return;
-            dispatch({ type: ACTIONS.PLACE_CARD, payload: { row, col } });
-          }}
-          onUnitClick={setSelectedUnit}
-          currentPlayer={state.currentPlayer}
-          selectedCard={state.selectedCard}
-        />
-        <PlayerHand
-          hand={state.players[state.currentPlayer].hand}
-          mana={state.players[state.currentPlayer].mana}
-          selectedCard={state.selectedCard}
-          currentPlayer={state.currentPlayer}
-          onCardClick={handleCardClick}
-        />
-        <div className="flex gap-4 mb-6">
+    <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 text-white p-4">
+      <div className="max-w-6xl mx-auto">
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent">
+            CURVE GAME
+          </h1>
           <button
-            onClick={() => dispatch({ type: ACTIONS.END_TURN })}
-            className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-500 hover:to-green-600 px-6 py-3 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed font-bold shadow-lg transition-all duration-200 transform hover:scale-105"
-            disabled={state.gameOver || (state.gameMode === 'ai' && state.currentPlayer === 1) || state.isProcessingAI}
+            onClick={backToMenu}
+            className="bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded-lg text-sm transition-colors"
           >
-            End Turn
+            Menu
           </button>
-          
-          {state.gameOver && (
-            <button
-              onClick={() => {
-                const newGame = initializeGame(state.players[0].archetype, state.players[1].archetype);
-                newGame.gameMode = state.gameMode;
-                dispatch({ type: ACTIONS.START_GAME, payload: newGame });
-              }}
-              className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 px-6 py-3 rounded-lg font-bold shadow-lg transition-all duration-200 transform hover:scale-105"
-            >
-              Restart Game
-            </button>
-          )}
         </div>
+        
+        {/* Main game container with flex layout */}
+        <div className="flex flex-col lg:flex-row gap-6">
+          {/* Left section - Game board and controls */}
+          <div className="flex-1">
+            {/* Game Info */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+              <div className={`p-3 rounded-lg border-2 transition-all duration-200 ${
+                state.currentPlayer === 0 ? 'border-blue-400 shadow-lg shadow-blue-500/30' : 'border-blue-700'
+              } bg-gradient-to-br from-blue-800 to-blue-900`}>
+                <div className="text-white font-bold flex items-center gap-2">
+                  <span className="text-lg">{ARCHETYPES[state.players[0].archetype].icon}</span>
+                  Player 1 - {ARCHETYPES[state.players[0].archetype].name}
+                </div>
+                <div className="mt-2 space-y-1">
+                  <div className="flex items-center gap-2">
+                    <div className="text-red-400">❤️</div>
+                    <div className="w-32 h-3 bg-gray-700 rounded-full overflow-hidden">
+                      <div 
+                        className="h-full bg-red-500 transition-all duration-300"
+                        style={{ width: `${(state.players[0].health / STARTING_HEALTH) * 100}%` }}
+                      />
+                    </div>
+                    <span className="text-white text-sm">{state.players[0].health}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-white text-sm">
+                    <span className="text-blue-400">💎</span>
+                    {state.players[0].mana}/{state.players[0].manaCapacity}
+                  </div>
+                  <div className="flex items-center gap-2 text-white text-sm">
+                    <span className="text-gray-400">📚</span>
+                    {state.players[0].deck.length} cards
+                  </div>
+                </div>
+              </div>
+              
+              <div className="p-3 bg-gradient-to-br from-gray-700 to-gray-800 rounded-lg border-2 border-gray-600">
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-yellow-400">Turn {state.turn}</div>
+                  <div className="text-white mt-2">{state.message}</div>
+                  <div className="text-sm text-gray-400 mt-1">
+                    {state.currentPlayer === 0 ? 'Player 1' : (state.gameMode === 'ai' ? 'AI' : 'Player 2')}'s Turn
+                  </div>
+                </div>
+              </div>
+              
+              <div className={`p-3 rounded-lg border-2 transition-all duration-200 ${
+                state.currentPlayer === 1 ? 'border-red-400 shadow-lg shadow-red-500/30' : 'border-red-700'
+              } bg-gradient-to-br from-red-800 to-red-900`}>
+                <div className="text-white font-bold flex items-center gap-2">
+                  <span className="text-lg">{ARCHETYPES[state.players[1].archetype].icon}</span>
+                  {state.gameMode === 'ai' ? '🤖 AI' : 'Player 2'} - {ARCHETYPES[state.players[1].archetype].name}
+                </div>
+                <div className="mt-2 space-y-1">
+                  <div className="flex items-center gap-2">
+                    <div className="text-red-400">❤️</div>
+                    <div className="w-32 h-3 bg-gray-700 rounded-full overflow-hidden">
+                      <div 
+                        className="h-full bg-red-500 transition-all duration-300"
+                        style={{ width: `${(state.players[1].health / STARTING_HEALTH) * 100}%` }}
+                      />
+                    </div>
+                    <span className="text-white text-sm">{state.players[1].health}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-white text-sm">
+                    <span className="text-blue-400">💎</span>
+                    {state.players[1].mana}/{state.players[1].manaCapacity}
+                  </div>
+                  <div className="flex items-center gap-2 text-white text-sm">
+                    <span className="text-gray-400">📚</span>
+                    {state.players[1].deck.length} cards
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            {/* Game Board */}
+            <GameBoard
+              board={state.board}
+              onCellClick={(row, col) => {
+                if (!state?.selectedCard) return;
+                dispatch({ type: ACTIONS.PLACE_CARD, payload: { row, col } });
+              }}
+              onUnitClick={setSelectedUnit}
+              currentPlayer={state.currentPlayer}
+              selectedCard={state.selectedCard}
+            />
+            
+            {/* Current Player's Hand */}
+            <PlayerHand
+              player={state.players[state.currentPlayer]}
+              currentPlayer={state.currentPlayer}
+              onCardSelect={card => {
+                if (state?.gameMode === 'ai' && state?.currentPlayer === 1) return;
+                dispatch({ type: ACTIONS.SELECT_CARD, payload: { card } });
+              }}
+              gameMode={state.gameMode}
+              selectedCard={state.selectedCard}
+              isProcessingAI={state.isProcessingAI}
+            />
+            
+            {/* Controls */}
+            <div className="flex gap-4 mb-6">
+              <button
+                onClick={() => dispatch({ type: ACTIONS.END_TURN })}
+                className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-500 hover:to-green-600 px-6 py-3 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed font-bold shadow-lg transition-all duration-200 transform hover:scale-105"
+                disabled={state.gameOver || (state.gameMode === 'ai' && state.currentPlayer === 1) || state.isProcessingAI}
+              >
+                End Turn
+              </button>
+              
+              {state.gameOver && (
+                <button
+                  onClick={() => {
+                    const newGame = initializeGame(state.players[0].archetype, state.players[1].archetype);
+                    newGame.gameMode = state.gameMode;
+                    dispatch({ type: ACTIONS.START_GAME, payload: newGame });
+                  }}
+                  className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 px-6 py-3 rounded-lg font-bold shadow-lg transition-all duration-200 transform hover:scale-105"
+                >
+                  Restart Game
+                </button>
+              )}
+            </div>
+          </div>
+          
+          {/* Right section - Game Log */}
+          <div className="w-full lg:w-96">
+            <div className="bg-gray-800/50 rounded-xl p-4 sticky top-4">
+              <h3 className="text-lg font-bold mb-3 flex items-center gap-2">
+                <span className="text-gray-400">📜</span>
+                Game Log
+              </h3>
+              <div 
+                ref={logRef}
+                className="bg-gray-900/70 border border-gray-700 rounded-lg p-4 h-[400px] overflow-y-auto text-sm font-mono custom-scrollbar"
+                style={{
+                  scrollbarWidth: 'thin',
+                  scrollbarColor: '#4B5563 #1F2937'
+                }}
+              >
+                {(state.log || []).map((entry, index) => (
+                  <div 
+                    key={index} 
+                    className={`mb-1 ${
+                      entry.includes('damage') ? 'text-red-400' :
+                      entry.includes('defeat') ? 'text-orange-400' :
+                      entry.includes('draws') ? 'text-blue-400' :
+                      entry.includes('Win') ? 'text-yellow-400 font-bold' :
+                      'text-gray-300'
+                    }`}
+                  >
+                    {entry}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        {/* Error display */}
+        {state.error && (
+          <div className="mt-4 p-4 bg-red-900 border border-red-700 rounded">
+            <p className="text-red-200">{state.error}</p>
+          </div>
+        )}
+        
+        {/* Loading indicator */}
+        {state.isProcessingAI && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center backdrop-blur-sm">
+            <div className="bg-gray-800 p-8 rounded-xl shadow-xl">
+              <div className="relative">
+                <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <span className="text-2xl">🤔</span>
+                </div>
+              </div>
+              <p className="mt-4 text-white font-bold">AI is thinking...</p>
+            </div>
+          </div>
+        )}
       </div>
       
+      {/* Card Modal for unit details */}
       {selectedUnit && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center" onClick={() => setSelectedUnit(null)}>
-          <div className="bg-gray-800 p-4 rounded-lg shadow-lg max-w-sm w-full" onClick={e => e.stopPropagation()}>
-            <h2 className="text-xl text-yellow-400 mb-2">{selectedUnit.name}</h2>
-            <p className="text-white">Type: {selectedUnit.type}</p>
-            <p className="text-white">Attack: {selectedUnit.attack}</p>
-            <p className="text-white">Health: {selectedUnit.health}/{selectedUnit.maxHealth}</p>
-            <p className="text-white mt-2">{selectedUnit.description}</p>
-            <button className="mt-4 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded" onClick={() => setSelectedUnit(null)}>
-              Close
-            </button>
-          </div>
-        </div>
+        <CardModal 
+          card={selectedUnit} 
+          onClose={() => setSelectedUnit(null)} 
+        />
       )}
     </div>
   );

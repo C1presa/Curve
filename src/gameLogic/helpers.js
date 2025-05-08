@@ -46,15 +46,6 @@ export const ARCHETYPES = {
   }
 };
 
-// Helper to shuffle an array
-function shuffleArray(array) {
-  for (let i = array.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [array[i], array[j]] = [array[j], array[i]];
-  }
-  return array;
-}
-
 // Generate a single card
 export const generateCard = (id, archetypeKey, hasTaunt = false) => {
   const archetype = ARCHETYPES[archetypeKey];
@@ -62,30 +53,25 @@ export const generateCard = (id, archetypeKey, hasTaunt = false) => {
   let attack, health;
   
   if (hasTaunt) {
+    // For Taunt units, less attack, more health
     attack = Math.max(1, Math.floor(cost * 0.6 + Math.random() * 2));
     health = Math.max(1, Math.floor(cost * 1.4 + Math.random() * 2));
   } else {
-    switch(archetypeKey) {
-      case 'orc': 
-        attack = Math.floor(cost * 1.2 + Math.random() * 2);
-        health = Math.floor(cost * 0.8 + Math.random() * 2);
-        break;
-      case 'minotaur':
-        attack = Math.floor(cost * 0.8 + Math.random() * 2);
-        health = Math.floor(cost * 1.3 + Math.random() * 2);
-        break;
-      case 'human':
-        attack = Math.floor(cost * 0.9 + Math.random() * 2);
-        health = Math.floor(cost * 1.1 + Math.random() * 2);
-        break;
-      default:
-        attack = Math.floor(cost * 1.0 + Math.random() * 2);
-        health = Math.floor(cost * 1.0 + Math.random() * 2);
+    // Regular stats based on archetype
+    if (archetypeKey === 'orc') {
+      attack = Math.max(1, Math.floor(cost * 1.2 + Math.random() * 2));
+      health = Math.max(1, Math.floor(cost * 0.8 + Math.random() * 2));
+    } else if (archetypeKey === 'minotaur') {
+      attack = Math.max(1, Math.floor(cost * 0.8 + Math.random() * 2));
+      health = Math.max(1, Math.floor(cost * 1.3 + Math.random() * 2));
+    } else if (archetypeKey === 'human') {
+      attack = Math.max(1, Math.floor(cost * 0.9 + Math.random() * 2));
+      health = Math.max(1, Math.floor(cost * 1.1 + Math.random() * 2));
+    } else {
+      attack = Math.max(1, Math.floor(cost * 1.0 + Math.random() * 2));
+      health = Math.max(1, Math.floor(cost * 1.0 + Math.random() * 2));
     }
   }
-  
-  attack = Math.max(1, attack);
-  health = Math.max(1, health);
   
   return {
     id,
@@ -97,73 +83,69 @@ export const generateCard = (id, archetypeKey, hasTaunt = false) => {
     type: archetypeKey,
     movement: 1,
     hasTaunt,
-    hasBattlecast: false,
-    hasRage: false,
     description: hasTaunt ? 'Has Taunt: Enemies must attack this unit first.' : 'Basic unit with no special abilities'
   };
 };
 
-// Generate a shuffled deck of 15 cards with Taunt, Battlecast, and Rage
-export const generateDeck = (archetypeKey) => {
+// Generate a preview deck for deck selection
+export const generatePreviewDeck = (archetypeKey) => {
+  const archetype = ARCHETYPES[archetypeKey];
   const deck = [];
-  const tauntCount = Math.floor(15 * 0.2); // 3 taunt cards
-  for (let i = 1; i <= 15; i++) {
-    const hasTaunt = i <= tauntCount;
-    deck.push(generateCard(`p${i}_card`, archetypeKey, hasTaunt));
-  }
-  // Select 4 unique indices for effects
-  const effectIndices = shuffleArray([...Array(15).keys()]).slice(0,4);
-  // Assign Battlecast to first two
-  deck[effectIndices[0]].hasBattlecast = true;
-  deck[effectIndices[0]].name += ' Battlecaster';
-  deck[effectIndices[0]].description += ' Battlecast: Gains +2/+2 when played.';
-
-  deck[effectIndices[1]].hasBattlecast = true;
-  deck[effectIndices[1]].name += ' Battlecaster';
-  deck[effectIndices[1]].description += ' Battlecast: Gains +2/+2 when played.';
-
-  // Assign Rage to next two
-  deck[effectIndices[2]].hasRage = true;
-  deck[effectIndices[2]].name += ' Rager';
-  deck[effectIndices[2]].description += ' Rage: Gains +3 attack when it takes damage.';
-
-  deck[effectIndices[3]].hasRage = true;
-  deck[effectIndices[3]].name += ' Rager';
-  deck[effectIndices[3]].description += ' Rage: Gains +3 attack when it takes damage.';
-
-  // Shuffle deck
-  return shuffleArray(deck);
+  const commonCosts = [1, 2, 2, 3, 3, 3, 4, 4, 4, 5, 5, 6, 6, 7, 8];
+  commonCosts.forEach((cost, i) => {
+    let attack, health;
+    if (archetypeKey === 'orc') {
+      attack = Math.floor(cost * 1.2);
+      health = Math.floor(cost * 0.8);
+    } else if (archetypeKey === 'minotaur') {
+      attack = Math.floor(cost * 0.8);
+      health = Math.floor(cost * 1.3);
+    } else if (archetypeKey === 'human') {
+      attack = Math.floor(cost * 0.9);
+      health = Math.floor(cost * 1.1);
+    } else {
+      attack = cost;
+      health = cost;
+    }
+    attack = Math.max(1, attack);
+    health = Math.max(1, health);
+    deck.push({
+      id: `preview_${archetypeKey}_common_${i}`,
+      name: `${archetype.name} Warrior`,
+      cost,
+      attack,
+      health,
+      maxHealth: health,
+      type: archetypeKey,
+      isSpecial: false,
+      effects: [],
+      effectDetails: [],
+      description: 'Basic unit with no special abilities'
+    });
+  });
+  return deck;
 };
 
-// Generate a preview deck for deck selection (mirrors generateDeck logic)
-export const generatePreviewDeck = (archetypeKey) => {
+// Generate a shuffled deck of 15 cards
+export const generateDeck = (archetypeKey) => {
   const deck = [];
-  const tauntCount = Math.floor(15 * 0.2); // 3 taunt cards
-  for (let i = 1; i <= 15; i++) {
-    const hasTaunt = i <= tauntCount;
-    deck.push(generateCard(`p${i}_card`, archetypeKey, hasTaunt));
+  const numTaunt = Math.floor(15 * 0.2); // 20% have Taunt
+  const tauntIndices = new Set();
+  while (tauntIndices.size < numTaunt) {
+    tauntIndices.add(Math.floor(Math.random() * 15));
   }
-  // Select 4 unique indices for effects
-  const effectIndices = shuffleArray([...Array(15).keys()]).slice(0,4);
-  // Assign Battlecast to first two
-  deck[effectIndices[0]].hasBattlecast = true;
-  deck[effectIndices[0]].name += ' Battlecaster';
-  deck[effectIndices[0]].description += ' Battlecast: Gains +2/+2 when played.';
-
-  deck[effectIndices[1]].hasBattlecast = true;
-  deck[effectIndices[1]].name += ' Battlecaster';
-  deck[effectIndices[1]].description += ' Battlecast: Gains +2/+2 when played.';
-
-  // Assign Rage to next two
-  deck[effectIndices[2]].hasRage = true;
-  deck[effectIndices[2]].name += ' Rager';
-  deck[effectIndices[2]].description += ' Rage: Gains +3 attack when it takes damage.';
-
-  deck[effectIndices[3]].hasRage = true;
-  deck[effectIndices[3]].name += ' Rager';
-  deck[effectIndices[3]].description += ' Rage: Gains +3 attack when it takes damage.';
-
-  // Return deck (may not shuffle for preview)
+  
+  for (let i = 0; i < 15; i++) {
+    const hasTaunt = tauntIndices.has(i);
+    deck.push(generateCard(`p${i}_common_${i}`, archetypeKey, hasTaunt));
+  }
+  
+  // Shuffle deck
+  for (let i = deck.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [deck[i], deck[j]] = [deck[j], deck[i]];
+  }
+  
   return deck;
 };
 
@@ -289,26 +271,9 @@ export const advanceUnits = (state) => {
     
     // Try to move if space is empty
     if (newRow >= 0 && newRow < ROWS && !newState.board[newRow][col]) {
-      // Check adjacent cells for enemy Taunt units
-      let canMove = true;
-      const adjacentCols = [col - 1, col, col + 1];
-      
-      for (const adjCol of adjacentCols) {
-        if (adjCol >= 0 && adjCol < COLS) {
-          const adjUnit = newState.board[newRow][adjCol];
-          if (adjUnit && adjUnit.playerIndex !== currentPlayer && adjUnit.hasTaunt) {
-            canMove = false;
-            newState.log = [...newState.log, `Turn ${state.turn}: ${unit.name} cannot move due to enemy Taunt unit ${adjUnit.name} at ${newRow},${adjCol}`];
-            break;
-          }
-        }
-      }
-      
-      if (canMove) {
-        newState.board[newRow][col] = unit;
-        newState.board[row][col] = null;
-        newState.log = [...newState.log, `Turn ${state.turn}: ${unit.name} moved to ${newRow},${col}`];
-      }
+      newState.board[newRow][col] = unit;
+      newState.board[row][col] = null;
+      newState.log = [...newState.log, `Turn ${state.turn}: ${unit.name} moved to ${newRow},${col}`];
     }
   });
   
@@ -349,20 +314,20 @@ export const battleUnits = (state) => {
     ].filter(cell => cell.r >= 0 && cell.r < ROWS && cell.c >= 0 && cell.c < COLS);
     
     // Find all valid targets
-    const targets = frontCells
+    const validTargets = frontCells
       .map(cell => ({ ...cell, unit: newState.board[cell.r][cell.c] }))
       .filter(cell => cell.unit && cell.unit.playerIndex !== currentPlayer);
     
-    if (targets.length > 0) {
+    if (validTargets.length > 0) {
       // Prioritize Taunt units
-      const tauntTargets = targets.filter(t => t.unit.hasTaunt);
-      const target = tauntTargets.length > 0 ? tauntTargets[0] : targets[0];
+      const tauntTargets = validTargets.filter(t => t.unit.hasTaunt);
+      const target = tauntTargets.length > 0 ? tauntTargets[0] : validTargets[0];
       
       // Attack
       const originalHealth = target.unit.health;
       const damageDealt = unit.attack;
       const isOnSpawnRow = target.r === opponentSpawnRow;
-      let newTarget = { ...target.unit, health: target.unit.health - damageDealt };
+      const newTarget = { ...target.unit, health: target.unit.health - damageDealt };
       
       if (isOnSpawnRow && newTarget.health <= 0) {
         const excessDamage = damageDealt - originalHealth;
@@ -380,11 +345,6 @@ export const battleUnits = (state) => {
         newState.board[target.r][target.c] = null;
         newState.log = [...newState.log, `Turn ${state.turn}: ${target.unit.name} is defeated!`];
       } else {
-        // Apply Rage effect if present
-        if (newTarget.hasRage) {
-          newTarget.attack += 3;
-          newState.log = [...newState.log, `Turn ${state.turn}: ${newTarget.name} gains +3 attack from Rage!`];
-        }
         newState.board[target.r][target.c] = newTarget;
       }
     }

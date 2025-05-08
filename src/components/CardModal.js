@@ -20,6 +20,9 @@ const CardModal = React.memo(({ card, onClose }) => {
             <div className="flex items-center gap-2 text-gray-300">
               <span className="text-lg">{archetype.icon}</span>
               <span>{archetype.name}</span>
+              {card.hasTaunt && (
+                <span className="text-lg ml-2" title="Taunt: Enemies must attack this unit first">🛡️</span>
+              )}
             </div>
           </div>
           <button 
@@ -30,23 +33,28 @@ const CardModal = React.memo(({ card, onClose }) => {
           </button>
         </div>
         {/* Stats */}
-        <div className="grid grid-cols-3 gap-4 mb-6">
-          <div className="bg-blue-900/50 p-3 rounded-lg text-center">
-            <div className="text-sm text-blue-300">Cost</div>
-            <div className="text-2xl font-bold text-white">{card.cost}</div>
+        <div className="grid grid-cols-2 gap-4 mb-4">
+          <div className="bg-gray-700/50 p-3 rounded-lg">
+            <div className="text-gray-400 text-sm">Cost</div>
+            <div className="text-white text-xl font-bold">{card.cost}</div>
           </div>
-          <div className="bg-red-900/50 p-3 rounded-lg text-center">
-            <div className="text-sm text-red-300">Attack</div>
-            <div className="text-2xl font-bold text-white">{card.attack}</div>
+          <div className="bg-gray-700/50 p-3 rounded-lg">
+            <div className="text-gray-400 text-sm">Type</div>
+            <div className="text-white text-xl font-bold">{archetype.name}</div>
           </div>
-          <div className="bg-green-900/50 p-3 rounded-lg text-center">
-            <div className="text-sm text-green-300">Health</div>
-            <div className="text-2xl font-bold text-white">{card.health}</div>
+          <div className="bg-red-700/50 p-3 rounded-lg">
+            <div className="text-gray-400 text-sm">Attack</div>
+            <div className="text-white text-xl font-bold">{card.attack}</div>
+          </div>
+          <div className="bg-green-700/50 p-3 rounded-lg">
+            <div className="text-gray-400 text-sm">Health</div>
+            <div className="text-white text-xl font-bold">{card.health}</div>
           </div>
         </div>
         {/* Description */}
-        <div className="text-gray-300 text-sm">
-          {card.description || archetype.description}
+        <div className="bg-gray-700/30 p-4 rounded-lg">
+          <div className="text-gray-400 text-sm mb-2">Description</div>
+          <div className="text-white">{card.description}</div>
         </div>
       </div>
     </div>

@@ -42,67 +42,40 @@ const Cell = React.memo(({ unit, row, col, onClick, onUnitClick, isSpawnRow, isP
   );
 });
 
-const Unit = ({ unit, onClick }) => {
-  const unitStyle = {
-    width: '100%',
-    height: '100%',
-    display: 'flex',
-    flexDirection: 'column',
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: unit.playerIndex === 0 ? '#4a90e2' : '#e24a4a',
-    color: 'white',
-    borderRadius: '4px',
-    padding: '4px',
-    position: 'relative',
-    border: unit.hasTaunt ? '2px solid gold' : '1px solid #ccc',
-    boxShadow: unit.hasTaunt ? '0 0 8px gold' : 'none'
-  };
-
-  return (
-    <div style={unitStyle} onClick={onClick}>
-      <div style={{ fontSize: '0.8em', fontWeight: 'bold' }}>{unit.name}</div>
-      <div style={{ fontSize: '0.7em' }}>{unit.description}</div>
-      <div style={{ fontSize: '0.7em' }}>ATK: {unit.attack} HP: {unit.health}</div>
-      {unit.hasTaunt && (
-        <div style={{
-          position: 'absolute',
-          top: -8,
-          right: -8,
-          backgroundColor: 'gold',
-          color: 'black',
-          borderRadius: '50%',
-          width: '20px',
-          height: '20px',
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          fontSize: '12px',
-          fontWeight: 'bold'
-        }}>
-          T
-        </div>
-      )}
-    </div>
-  );
-};
-
 // GameBoard main component
-const GameBoard = ({ board, setSelectedUnit }) => {
-  return (
-    <div className="grid grid-cols-5 gap-1">
+const GameBoard = React.memo(({ board, onCellClick, currentPlayer, selectedCard, onUnitClick }) => (
+  <div className="bg-gray-900/50 p-4 rounded-xl mb-4 inline-block mx-auto">
+    <div className="border-4 border-gray-700 rounded-lg overflow-hidden">
       {board.map((row, rowIndex) => (
-        row.map((cell, colIndex) => (
-          <div
-            key={`${rowIndex}-${colIndex}`}
-            className={`border border-gray-600 p-1 h-24 w-24 flex items-center justify-center ${rowIndex < 2 ? 'bg-blue-900' : 'bg-red-900'}`}
-          >
-            {cell ? <UnitDisplay unit={cell} onClick={() => setSelectedUnit(cell)} /> : null}
-          </div>
-        ))
+        <div key={rowIndex} className="flex">
+          {row.map((unit, colIndex) => (
+            <Cell
+              key={`${rowIndex}-${colIndex}`}
+              unit={unit}
+              row={rowIndex}
+              col={colIndex}
+              onClick={onCellClick}
+              onUnitClick={onUnitClick}
+              isPlayer1Spawn={rowIndex === 0}
+              isPlayer2Spawn={rowIndex === board.length - 1}
+              isCurrentPlayerSpawn={
+                (rowIndex === 0 && currentPlayer === 0) || 
+                (rowIndex === board.length - 1 && currentPlayer === 1)
+              }
+              selectedCard={selectedCard}
+            />
+          ))}
+        </div>
       ))}
     </div>
-  );
-};
+    {/* Battle lines indicator */}
+    <div className="mt-3 flex justify-between px-4">
+      <div className="text-xs text-blue-400 font-bold">Player 1 Spawn</div>
+      <div className="text-xs text-gray-500">⚔️ Battlefield ⚔️</div>
+      <div className="text-xs text-red-400 font-bold">Player 2 Spawn</div>
+    </div>
+    <div className="text-xs text-gray-400 text-center mt-1">Click on units to see details</div>
+  </div>
+));
 
 export default GameBoard; 

@@ -1,14 +1,6 @@
 // Game reducer and action types for the card battle game
 // Handles all state transitions for the game
-import { 
-  advanceUnits, 
-  battleUnits, 
-  drawCardOrFatigue, 
-  checkWinCondition, 
-  MAX_MANA, 
-  ARCHETYPES,
-  ROWS 
-} from './helpers';
+import { advanceUnits, battleUnits, drawCardOrFatigue, checkWinCondition, MAX_MANA } from './helpers';
 
 // Action Types for useReducer
 export const ACTIONS = {
@@ -35,21 +27,6 @@ export const gameReducer = (state, action) => {
     case ACTIONS.SELECT_CARD: {
       const { card } = action.payload;
       const currentPlayer = state.players[state.currentPlayer];
-      
-      // Debug logging
-      console.log('Select Card Debug:', {
-        card,
-        currentPlayerMana: currentPlayer.mana,
-        cardCost: card.cost
-      });
-      
-      // Validate card type
-      if (!ARCHETYPES[card.type]) {
-        console.error('Invalid card type:', card);
-        return { ...state, message: 'Invalid card type!', selectedCard: null };
-      }
-      
-      // Check mana cost
       if (card.cost > currentPlayer.mana) {
         return {
           ...state,
@@ -57,7 +34,6 @@ export const gameReducer = (state, action) => {
           selectedCard: null
         };
       }
-      
       return {
         ...state,
         selectedCard: card,
@@ -67,74 +43,35 @@ export const gameReducer = (state, action) => {
     case ACTIONS.PLACE_CARD: {
       const { row, col } = action.payload;
       const currentPlayer = state.currentPlayer;
-      const validRow = currentPlayer === 0 ? 0 : ROWS - 1;
-      
-      // Debug logging
-      console.log('Place Card Debug:', {
-        row,
-        col,
-        currentPlayer,
-        validRow,
-        selectedCard: state.selectedCard,
-        board: state.board
-      });
-      
-      // Validate card and game state
-      if (!state.selectedCard || state.gameOver) {
-        console.log('Invalid state:', { selectedCard: state.selectedCard, gameOver: state.gameOver });
-        return state;
-      }
-      
-      // Validate spawn row
+      const validRow = currentPlayer === 0 ? 0 : state.board.length - 1;
+      if (!state.selectedCard || state.gameOver) return state;
       if (row !== validRow) {
-        console.log('Invalid row:', { row, validRow });
-        return { ...state, message: `Must place on spawn row ${validRow}!` };
+        return {
+          ...state,
+          message: 'Must place on spawn row!'
+        };
       }
-      
-      // Validate cell is empty
       if (state.board[row][col]) {
-        console.log('Cell occupied:', { row, col, existingUnit: state.board[row][col] });
-        return { ...state, message: 'Cell occupied!' };
+        return {
+          ...state,
+          message: 'Cell occupied!'
+        };
       }
-      
-      // Prepare the unit to place
-      const card = state.selectedCard;
-      let unit = { ...card, playerIndex: currentPlayer, maxHealth: card.health };
-      
-      // Apply Battlecast effect if present
-      if (unit.hasBattlecast) {
-        unit.attack += 2;
-        unit.health += 2;
-        unit.maxHealth += 2;
-      }
-      
-      // Place the card
-      const newBoard = state.board.map(row => [...row]);
-      newBoard[row][col] = unit;
-      
-      // Update player state
-      const player = state.players[currentPlayer];
-      const newHand = player.hand.filter(card => card.id !== state.selectedCard.id);
-      const newMana = player.mana - state.selectedCard.cost;
-      
-      const newPlayers = state.players.map((p, idx) => 
-        idx === currentPlayer 
-          ? { ...p, hand: newHand, mana: newMana }
-          : p
-      );
-      
-      console.log('Card placed successfully:', {
-        unit: newBoard[row][col],
-        newMana,
-        handSize: newHand.length
-      });
-      
+      const newBoard = state.board.map(r => [...r]);
+      const newPlayers = state.players.map(p => ({...p}));
+      const player = newPlayers[currentPlayer];
+      newBoard[row][col] = {
+        ...state.selectedCard,
+        playerIndex: currentPlayer
+      };
+      player.hand = player.hand.filter(c => c.id !== state.selectedCard.id);
+      player.mana -= state.selectedCard.cost;
       return {
         ...state,
         board: newBoard,
         players: newPlayers,
         selectedCard: null,
-        message: 'Card placed!',
+        message: 'Unit placed!',
         log: [...state.log, `Turn ${state.turn}: Player ${currentPlayer + 1} placed ${state.selectedCard.name} at ${row},${col}`]
       };
     }
@@ -156,6 +93,7 @@ export const gameReducer = (state, action) => {
     case ACTIONS.END_TURN: {
       // First, perform battle phase for current player
       let newState = battleUnits(state);
+      newState.log = [...newState.log, `Turn ${state.turn}: Battle phase for Player ${state.currentPlayer + 1}`];
       
       // Check win conditions after battle
       if (!newState.gameOver) {
@@ -178,23 +116,18 @@ export const gameReducer = (state, action) => {
       
       // Draw phase for next player
       newState = drawCardOrFatigue(newState, nextPlayer);
-      newState.log = [...newState.log, `Turn ${newState.turn}: Draw phase - Player ${nextPlayer + 1} draws a card`];
+      newState.log = [...newState.log, `Turn ${newState.turn}: Draw phase for Player ${nextPlayer + 1}`];
       
       // Advance phase for next player
-      if (!newState.isFirstTurn) {
-        newState = advanceUnits(newState);
-        newState.log = [...newState.log, `Turn ${newState.turn}: Advance phase - Player ${nextPlayer + 1}'s units advance`];
-      }
+      newState = advanceUnits(newState);
+      newState.log = [...newState.log, `Turn ${newState.turn}: Advance phase for Player ${nextPlayer + 1}`];
       
       // Update mana for next player
-      const updatedPlayers = newState.players.map((p, idx) => {
-        if (idx === nextPlayer) {
-          const manaCapacity = p.manaCapacity < MAX_MANA ? p.manaCapacity + 1 : p.manaCapacity;
-          return { ...p, manaCapacity, mana: manaCapacity };
-        }
-        return p;
-      });
-      newState = { ...newState, players: updatedPlayers };
+      const player = newState.players[nextPlayer];
+      const manaCapacity = player.manaCapacity < MAX_MANA ? player.manaCapacity + 1 : player.manaCapacity;
+      newState.players = newState.players.map((p, idx) => 
+        idx === nextPlayer ? { ...p, manaCapacity, mana: manaCapacity } : p
+      );
       
       // Set message for play phase
       newState.message = nextPlayer === 1 && state.gameMode === 'ai' ? 
