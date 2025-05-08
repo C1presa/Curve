@@ -24,14 +24,19 @@ const UnitDisplay = ({ unit }) => {
         <div className="font-bold text-sm truncate">{unit.name}</div>
       </div>
 
-      {/* Taunt Indicator */}
+      {/* Mana Cost - Upper Right */}
+      <div className="absolute top-1 right-1 bg-blue-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold shadow-lg">
+        {unit.cost}
+      </div>
+
+      {/* Taunt Indicator - Below Mana */}
       {unit.hasTaunt && (
-        <div className="absolute top-1 right-1 text-yellow-400">
+        <div className="absolute top-8 right-1 text-yellow-400 text-lg">
           🛡️
         </div>
       )}
 
-      {/* Stats Bar */}
+      {/* Stats Bar - Bottom */}
       <div className="absolute bottom-0 left-0 right-0 bg-black/50 text-white text-xs px-2 py-1 flex justify-between">
         <span className="text-red-400">⚔️ {unit.attack}</span>
         <span className="text-green-400">❤️ {unit.health}</span>
@@ -45,6 +50,10 @@ const UnitDisplay = ({ unit }) => {
             <div className="flex justify-between">
               <span className="text-gray-400">Type:</span>
               <span className="text-white">{archetype.name}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-400">Cost:</span>
+              <span className="text-blue-400">{unit.cost}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-gray-400">Attack:</span>
