@@ -2,7 +2,7 @@
 import React from 'react';
 import { ARCHETYPES } from '../gameLogic/helpers';
 
-const GameMenu = ({ onStart1v1, onStartAI }) => (
+const GameMenu = ({ onStart1v1, onStartAI, onCustomDeck }) => (
   <div className="min-h-screen menu-background text-white p-4">
     <div className="flex flex-col items-center justify-center min-h-[600px]">
       <div className="text-center mb-8 bg-gray-800 bg-opacity-70 p-8 rounded-xl">
@@ -23,6 +23,12 @@ const GameMenu = ({ onStart1v1, onStartAI }) => (
           className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-500 hover:to-green-600 text-white font-bold py-4 px-6 rounded-xl text-xl transition-all duration-200 transform hover:scale-105 hover:shadow-lg hover:shadow-green-500/30"
         >
           vs AI
+        </button>
+        <button
+          onClick={onCustomDeck}
+          className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-500 hover:to-purple-600 text-white font-bold py-4 px-6 rounded-xl text-xl transition-all duration-200 transform hover:scale-105 hover:shadow-lg hover:shadow-purple-500/30"
+        >
+          Custom Deck
         </button>
       </div>
       <div className="mt-10 text-gray-400 text-center max-w-md bg-gray-800 bg-opacity-70 p-6 rounded-xl">

@@ -8,6 +8,7 @@ import PlayerHand from './components/PlayerHand';
 import CardModal from './components/CardModal';
 import DeckSelection from './components/DeckSelection';
 import GameMenu from './components/GameMenu';
+import CustomDeckBuilder from './components/CustomDeckBuilder';
 import './App.css';
 
 // Game Constants
@@ -65,6 +66,7 @@ const CardBattleGame = () => {
   const [selectedUnit, setSelectedUnit] = useState(null);
   const [playerDeckChoices, setPlayerDeckChoices] = useState({ player1: null, player2: null });
   const [deckSelectionPhase, setDeckSelectionPhase] = useState(null);
+  const [selectedCustomDeck, setSelectedCustomDeck] = useState(null);
   const timeoutRefs = useRef([]);
   const logRef = useRef(null);
   
@@ -205,6 +207,7 @@ const CardBattleGame = () => {
     setGameMode(mode);
     setDeckSelectionPhase('player1');
     setPlayerDeckChoices({ player1: null, player2: null });
+    setSelectedCustomDeck(null);
   }, []);
 
   const handleDeckSelect = useCallback((archetype) => {
@@ -244,23 +247,49 @@ const CardBattleGame = () => {
     }
   }, [deckSelectionPhase, gameMode, playerDeckChoices.player1]);
 
+  const handleCustomDeckSelect = useCallback((deck) => {
+    setSelectedCustomDeck(deck);
+    setDeckSelectionPhase('player2');
+  }, []);
+
   const backToMenu = useCallback(() => {
     setGameMode('menu');
     setDeckSelectionPhase(null);
     setPlayerDeckChoices({ player1: null, player2: null });
+    setSelectedCustomDeck(null);
   }, []);
   
   // Main render logic
   if (gameMode === 'menu') {
-    return <GameMenu onStart1v1={() => startDeckSelection('1v1')} onStartAI={() => startDeckSelection('ai')} />;
+    return (
+      <ErrorBoundary>
+        <GameMenu 
+          onStart1v1={() => startDeckSelection('1v1')}
+          onStartAI={() => startDeckSelection('ai')}
+          onCustomDeck={() => setGameMode('custom-deck')}
+        />
+      </ErrorBoundary>
+    );
+  }
+
+  if (gameMode === 'custom-deck') {
+    return (
+      <ErrorBoundary>
+        <CustomDeckBuilder onBack={backToMenu} />
+      </ErrorBoundary>
+    );
   }
 
   if (deckSelectionPhase) {
     return (
-      <DeckSelection 
-        onSelectDeck={handleDeckSelect} 
-        onBack={backToMenu}
-      />
+      <ErrorBoundary>
+        <DeckSelection
+          onSelectDeck={handleDeckSelect}
+          onBack={backToMenu}
+          selectedCustomDeck={selectedCustomDeck}
+          onCustomDeckSelect={handleCustomDeckSelect}
+        />
+      </ErrorBoundary>
     );
   }
 
