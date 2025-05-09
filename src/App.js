@@ -8,6 +8,7 @@ import PlayerHand from './components/PlayerHand';
 import CardModal from './components/CardModal';
 import DeckSelection from './components/DeckSelection';
 import GameMenu from './components/GameMenu';
+import './App.css';
 
 // Game Constants
 const ROWS = 5;
@@ -66,13 +67,6 @@ const CardBattleGame = () => {
   const [deckSelectionPhase, setDeckSelectionPhase] = useState(null);
   const timeoutRefs = useRef([]);
   const logRef = useRef(null);
-  
-  // Get background color based on current player's archetype
-  const getBackgroundClass = useCallback(() => {
-    if (!state) return 'bg-gray-900';
-    const currentArchetype = state.players[state.currentPlayer].archetype;
-    return `bg-gradient-to-b from-${ARCHETYPES[currentArchetype].color} to-gray-900`;
-  }, [state]);
   
   // Cleanup timeouts on unmount
   useEffect(() => {
@@ -276,7 +270,7 @@ const CardBattleGame = () => {
 
   // Game UI rendering
   return (
-    <div className={`min-h-screen ${getBackgroundClass()} text-white p-4`}>
+    <div className="min-h-screen game-background text-white p-4">
       <div className="max-w-7xl mx-auto">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent">

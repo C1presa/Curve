@@ -1,12 +1,12 @@
 // DeckSelection component for choosing a deck/archetype and previewing cards
 import React, { useState, useEffect } from 'react';
 import { ARCHETYPES, generatePreviewDeck } from '../gameLogic/helpers';
-import CardDisplay from './CardDisplay';
+import Card from './Card';
 import CardModal from './CardModal';
 
 const DeckSelection = ({ onSelectDeck, onBack }) => {
   const [selectedArchetype, setSelectedArchetype] = useState(null);
-  const [viewMode, setViewMode] = useState('grid');
+  const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'list'
   const [previewDecks, setPreviewDecks] = useState({});
   const [expandedCard, setExpandedCard] = useState(null);
 
@@ -27,36 +27,46 @@ const DeckSelection = ({ onSelectDeck, onBack }) => {
 
   // Render deck preview
   const renderDeckPreview = (archetypeKey) => {
-    if (!archetypeKey || !previewDecks[archetypeKey]) {
-      return <div className="text-gray-500">No cards available for this deck.</div>;
-    }
-
     const deck = previewDecks[archetypeKey];
-    if (!Array.isArray(deck)) {
-      console.error('Invalid deck format:', deck);
-      return <div className="text-red-500">Error: Invalid deck format</div>;
-    }
-
+    if (!deck) return null;
     return (
       <div className="space-y-6">
         <div>
-          <h3 className="text-xl font-bold text-white mb-3">Deck Cards ({deck.length})</h3>
+          <h3 className="text-xl font-bold text-white mb-3">Deck Cards (15)</h3>
           <div className={`${viewMode === 'grid' ? 'grid grid-cols-5 gap-4' : 'space-y-2'}`}>
-            {deck.map((card, index) => {
-              if (!card || !card.type) {
-                console.error('Invalid card in deck:', card);
-                return null;
-              }
-              return (
+            {deck.map(card => (
+              viewMode === 'grid' ? (
+                <Card 
+                  key={card.id} 
+                  card={card} 
+                  archetype={archetypeKey}
+                  onClick={setExpandedCard}
+                />
+              ) : (
                 <div 
-                  key={`${card.type}-${index}`}
-                  className="cursor-pointer transform transition-transform hover:scale-105"
+                  key={card.id} 
+                  className={`bg-gray-800 p-3 rounded-lg flex items-center justify-between hover:bg-gray-700 cursor-pointer ${card.hasTaunt ? 'border-l-4 border-yellow-400' : ''}`}
                   onClick={() => setExpandedCard(card)}
                 >
-                  <CardDisplay card={card} />
+                  <div className="flex items-center gap-4">
+                    <div className="bg-blue-700 w-8 h-8 rounded-full flex items-center justify-center">
+                      <span className="text-white font-bold">{card.cost}</span>
+                    </div>
+                    <span className="text-white font-bold">{card.name}</span>
+                    {card.hasTaunt && (
+                      <div className="flex items-center gap-1 text-yellow-400" title="Taunt: Enemies must attack this unit first">
+                        <span>🛡️</span>
+                        <span className="text-sm">Taunt</span>
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <span className="text-red-400">⚔️ {card.attack}</span>
+                    <span className="text-green-400">❤️ {card.health}</span>
+                  </div>
                 </div>
-              );
-            })}
+              )
+            ))}
           </div>
         </div>
       </div>
@@ -75,17 +85,16 @@ const DeckSelection = ({ onSelectDeck, onBack }) => {
             Back to Menu
           </button>
         </div>
-        
         {/* Archetype selection */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           {Object.entries(ARCHETYPES).map(([key, archetype]) => (
             <div
               key={key}
+              onClick={() => setSelectedArchetype(key)}
               className={`p-6 rounded-xl border-2 cursor-pointer transition-all duration-200 
                 ${selectedArchetype === key 
                   ? `${archetype.color} border-yellow-400 shadow-lg shadow-yellow-400/30` 
                   : `${archetype.color} border-gray-600 hover:border-gray-400`}`}
-              onClick={() => setSelectedArchetype(key)}
             >
               <div className="flex items-center gap-3 mb-3">
                 <span className="text-4xl">{archetype.icon}</span>
@@ -95,13 +104,12 @@ const DeckSelection = ({ onSelectDeck, onBack }) => {
             </div>
           ))}
         </div>
-
         {/* Deck preview section */}
         {selectedArchetype && (
           <div className="bg-gray-800/50 rounded-xl p-6 mb-8">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-3xl font-bold">
-                {ARCHETYPES[selectedArchetype]?.name || 'Selected'} Deck Preview
+                {ARCHETYPES[selectedArchetype].name} Deck Preview
               </h2>
               <div className="flex items-center gap-4">
                 <div className="flex items-center gap-2 bg-gray-700 rounded-lg p-1">
@@ -120,12 +128,7 @@ const DeckSelection = ({ onSelectDeck, onBack }) => {
                 </div>
                 <button
                   onClick={handleConfirmSelection}
-                  disabled={!selectedArchetype}
-                  className={`px-6 py-2 rounded-lg font-bold ${
-                    selectedArchetype 
-                      ? 'bg-green-600 hover:bg-green-700' 
-                      : 'bg-gray-600 cursor-not-allowed'
-                  }`}
+                  className="bg-green-600 hover:bg-green-700 px-6 py-2 rounded-lg font-bold"
                 >
                   Confirm Selection
                 </button>
@@ -134,7 +137,6 @@ const DeckSelection = ({ onSelectDeck, onBack }) => {
             {renderDeckPreview(selectedArchetype)}
           </div>
         )}
-
         {/* Expanded card modal */}
         {expandedCard && (
           <CardModal card={expandedCard} onClose={() => setExpandedCard(null)} />
