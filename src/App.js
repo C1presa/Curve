@@ -248,9 +248,43 @@ const CardBattleGame = () => {
   }, [deckSelectionPhase, gameMode, playerDeckChoices.player1]);
 
   const handleCustomDeckSelect = useCallback((deck) => {
-    setSelectedCustomDeck(deck);
-    setDeckSelectionPhase('player2');
-  }, []);
+    if (deckSelectionPhase === 'player1') {
+      setPlayerDeckChoices(prev => ({ ...prev, player1: deck }));
+      setSelectedCustomDeck(deck);
+      
+      if (gameMode === 'ai') {
+        // AI randomly selects a deck
+        const archetypes = Object.keys(ARCHETYPES);
+        const aiArchetype = archetypes[Math.floor(Math.random() * archetypes.length)];
+        
+        // Start game immediately for AI mode
+        const initialState = initializeGame(deck, aiArchetype);
+        initialState.gameMode = gameMode;
+        
+        dispatch({ 
+          type: ACTIONS.START_GAME, 
+          payload: initialState
+        });
+        setDeckSelectionPhase(null);
+      } else {
+        // 1v1 mode - player 2 selects deck
+        setDeckSelectionPhase('player2');
+      }
+    } else if (deckSelectionPhase === 'player2') {
+      setPlayerDeckChoices(prev => ({ ...prev, player2: deck }));
+      setSelectedCustomDeck(deck);
+      
+      // Start game with both players' deck choices
+      const initialState = initializeGame(playerDeckChoices.player1, deck);
+      initialState.gameMode = gameMode;
+      
+      dispatch({ 
+        type: ACTIONS.START_GAME, 
+        payload: initialState
+      });
+      setDeckSelectionPhase(null);
+    }
+  }, [deckSelectionPhase, gameMode, playerDeckChoices.player1]);
 
   const backToMenu = useCallback(() => {
     setGameMode('menu');

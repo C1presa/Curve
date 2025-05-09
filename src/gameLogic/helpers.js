@@ -79,9 +79,14 @@ export const ARCHETYPES = {
 };
 
 // Generate a single card
-export const generateCard = (id, archetypeKey, hasTaunt = false) => {
+export const generateCard = (id, archetypeKey, hasTaunt = false, specifiedCost = null) => {
   const archetype = ARCHETYPES[archetypeKey];
-  const cost = Math.floor(Math.random() * 10) + 1;
+  if (!archetype) {
+    console.error('Invalid archetype:', archetypeKey);
+    return null;
+  }
+
+  const cost = specifiedCost || Math.floor(Math.random() * 10) + 1;
   let attack, health;
   
   if (hasTaunt) {
@@ -143,7 +148,8 @@ export const generatePreviewDeck = (archetypeKey) => {
   
   const deck = commonCosts.map((cost, i) => {
     const hasTaunt = tauntIndices.has(i);
-    const card = generateCard(`preview_${archetypeKey}_common_${i}`, archetypeKey, hasTaunt);
+    const card = generateCard(`preview_${archetypeKey}_common_${i}`, archetypeKey, hasTaunt, cost);
+    if (!card) return null;
     return {
       ...card,
       id: `preview_${archetypeKey}_common_${i}`, // Ensure preview ID is maintained
@@ -151,7 +157,7 @@ export const generatePreviewDeck = (archetypeKey) => {
       effects: hasTaunt ? ['Taunt'] : [],
       effectDetails: hasTaunt ? [{ type: 'Taunt', description: 'Enemies must attack this unit first' }] : []
     };
-  });
+  }).filter(Boolean); // Remove any null cards
   
   return deck;
 };
@@ -167,7 +173,10 @@ export const generateDeck = (archetypeKey) => {
   
   for (let i = 0; i < 15; i++) {
     const hasTaunt = tauntIndices.has(i);
-    deck.push(generateCard(`p${i}_common_${i}`, archetypeKey, hasTaunt));
+    const card = generateCard(`p${i}_common_${i}`, archetypeKey, hasTaunt);
+    if (card) {
+      deck.push(card);
+    }
   }
   
   // Shuffle deck

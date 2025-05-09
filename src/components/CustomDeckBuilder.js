@@ -67,7 +67,29 @@ const CustomDeckBuilder = ({ onBack }) => {
   };
 
   const generateCardForArchetype = (cost, hasTaunt = false) => {
-    return generateCard(`custom_${Date.now()}_${Math.random()}`, selectedArchetype, hasTaunt);
+    if (!selectedArchetype) {
+      alert('Please select an archetype first');
+      return;
+    }
+    if (deck.length >= 25) {
+      alert('Deck is full (25 cards)');
+      return;
+    }
+    
+    // Generate card with specific mana cost
+    const card = generateCard(
+      `custom_${Date.now()}_${Math.random()}`,
+      selectedArchetype,
+      hasTaunt,
+      cost
+    );
+    
+    if (!card) {
+      alert('Failed to generate card. Please try again.');
+      return;
+    }
+    
+    addToDeck(card);
   };
 
   return (
@@ -164,20 +186,20 @@ const CustomDeckBuilder = ({ onBack }) => {
             {selectedArchetype && (
               <div className="bg-gray-800/50 rounded-xl p-6">
                 <h2 className="text-2xl font-bold mb-4">Generate Cards</h2>
-                <div className="grid grid-cols-2 gap-4">
-                  {[1, 2, 3, 4, 5].map((cost) => (
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                  {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((cost) => (
                     <div key={cost} className="space-y-2">
                       <button
-                        onClick={() => addToDeck(generateCardForArchetype(cost))}
-                        className="w-full bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg"
+                        onClick={() => generateCardForArchetype(cost)}
+                        className="w-full bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg text-sm"
                       >
-                        Generate {cost} Mana Card
+                        {cost} Mana
                       </button>
                       <button
-                        onClick={() => addToDeck(generateCardForArchetype(cost, true))}
-                        className="w-full bg-yellow-600 hover:bg-yellow-700 px-4 py-2 rounded-lg"
+                        onClick={() => generateCardForArchetype(cost, true)}
+                        className="w-full bg-yellow-600 hover:bg-yellow-700 px-4 py-2 rounded-lg text-sm"
                       >
-                        Generate {cost} Mana Taunt
+                        {cost} Mana Taunt
                       </button>
                     </div>
                   ))}

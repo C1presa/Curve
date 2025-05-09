@@ -30,6 +30,8 @@ const DeckSelection = ({ onSelectDeck, onBack, selectedCustomDeck, onCustomDeckS
       onCustomDeckSelect(selectedCustomDeck);
     } else if (selectedArchetype) {
       onSelectDeck(selectedArchetype);
+    } else {
+      alert('Please select a deck first');
     }
   };
 
@@ -200,13 +202,67 @@ const DeckSelection = ({ onSelectDeck, onBack, selectedCustomDeck, onCustomDeckS
               ))}
             </div>
             {selectedCustomDeck && (
-              <div className="mt-6 flex justify-end">
-                <button
-                  onClick={handleConfirmSelection}
-                  className="bg-green-600 hover:bg-green-700 px-6 py-2 rounded-lg font-bold"
-                >
-                  Confirm Selection
-                </button>
+              <div className="mt-6">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-xl font-bold">Deck Preview</h3>
+                  <div className="flex items-center gap-2 bg-gray-700 rounded-lg p-1">
+                    <button
+                      onClick={() => setViewMode('grid')}
+                      className={`px-3 py-1 rounded ${viewMode === 'grid' ? 'bg-blue-600' : 'hover:bg-gray-600'}`}
+                    >
+                      Grid
+                    </button>
+                    <button
+                      onClick={() => setViewMode('list')}
+                      className={`px-3 py-1 rounded ${viewMode === 'list' ? 'bg-blue-600' : 'hover:bg-gray-600'}`}
+                    >
+                      List
+                    </button>
+                  </div>
+                </div>
+                <div className={`${viewMode === 'grid' ? 'grid grid-cols-5 gap-4' : 'space-y-2'}`}>
+                  {selectedCustomDeck.cards.map((card, index) => (
+                    viewMode === 'grid' ? (
+                      <Card 
+                        key={card.id} 
+                        card={card} 
+                        archetype={selectedCustomDeck.archetype}
+                        onClick={() => setExpandedCard(card)}
+                      />
+                    ) : (
+                      <div 
+                        key={card.id} 
+                        className={`bg-gray-800 p-3 rounded-lg flex items-center justify-between hover:bg-gray-700 cursor-pointer ${card.hasTaunt ? 'border-l-4 border-yellow-400' : ''}`}
+                        onClick={() => setExpandedCard(card)}
+                      >
+                        <div className="flex items-center gap-4">
+                          <div className="bg-blue-700 w-8 h-8 rounded-full flex items-center justify-center">
+                            <span className="text-white font-bold">{card.cost}</span>
+                          </div>
+                          <span className="text-white font-bold">{card.name}</span>
+                          {card.hasTaunt && (
+                            <div className="flex items-center gap-1 text-yellow-400" title="Taunt: Enemies must attack this unit first">
+                              <span>🛡️</span>
+                              <span className="text-sm">Taunt</span>
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-4">
+                          <span className="text-red-400">⚔️ {card.attack}</span>
+                          <span className="text-green-400">❤️ {card.health}</span>
+                        </div>
+                      </div>
+                    )
+                  ))}
+                </div>
+                <div className="mt-6 flex justify-end">
+                  <button
+                    onClick={handleConfirmSelection}
+                    className="bg-green-600 hover:bg-green-700 px-6 py-2 rounded-lg font-bold"
+                  >
+                    Confirm Selection
+                  </button>
+                </div>
               </div>
             )}
           </div>
